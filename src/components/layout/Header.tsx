@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, Play, RefreshCw, Zap } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Zap } from 'lucide-react';
 import { useTradingStore } from '../../store/useTradingStore';
 import { formatUsd } from '../../utils/formatters';
 
@@ -8,15 +8,12 @@ export const Header: React.FC = () => {
     tokens,
     pendingSetups,
     openPositions,
-    isDemoMode,
     isKillSwitchActive,
     filter,
     setFilter,
-    setMode,
     toggleKillSwitch,
     refreshTokens,
     isScanning,
-    runFullDemoScenario,
     solanaWsStatus,
     toggleSolanaWs,
   } = useTradingStore();
@@ -36,15 +33,10 @@ export const Header: React.FC = () => {
               <span className="font-bold text-sm tracking-wide text-zinc-100 font-mono">
                 TOKEN INTELLIGENCE <span className="text-sky-400 font-semibold">&amp; SNIPER</span>
               </span>
-              {isDemoMode ? (
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                  DEMO MODE
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  LIVE DATA
-                </span>
-              )}
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                LIVE RADAR
+              </span>
               <button
                 onClick={() => toggleSolanaWs(solanaWsStatus !== 'CONNECTED')}
                 className={`px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1.5 border transition ${
@@ -112,32 +104,21 @@ export const Header: React.FC = () => {
           <button
             onClick={() => refreshTokens()}
             disabled={isScanning}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-md border border-zinc-800 transition"
-            title="Rescan DEX pools"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-medium text-zinc-300 hover:text-zinc-100 bg-zinc-800/80 hover:bg-zinc-700/80 rounded-md border border-zinc-700/60 transition shadow-sm"
+            title="Rescan multi-DEX pools for new launches"
           >
-            <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin text-sky-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin text-sky-400' : 'text-zinc-400'}`} />
+            <span>{isScanning ? 'SCANNING...' : 'SCAN POOLS'}</span>
           </button>
 
-          {/* Mode Switcher Toggle */}
-          <button
-            onClick={() => setMode(!isDemoMode)}
-            className={`px-2.5 py-1 text-xs font-mono font-medium rounded-md border transition ${
-              isDemoMode
-                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
-                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-            }`}
+          {/* Safe Public Execution Badge */}
+          <div
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono font-medium rounded-md bg-zinc-900 border border-zinc-700/60 text-zinc-300"
+            title="Public Safe Execution: Orders evaluate against live order books and real-time prices without risking real user funds."
           >
-            Switch to {isDemoMode ? 'LIVE' : 'DEMO'}
-          </button>
-
-          {/* Run Demo Scenario Button */}
-          <button
-            onClick={runFullDemoScenario}
-            className="flex items-center gap-1.5 px-3 py-1 text-xs font-mono font-medium rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 transition shadow-sm"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            Run Demo Scenario
-          </button>
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+            <span>PAPER TRADING</span>
+          </div>
 
           {/* Emergency Kill Switch */}
           <button

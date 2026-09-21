@@ -1,19 +1,46 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, ShieldCheck, ArrowRight } from 'lucide-react';
 import { Token } from '../../types/token';
 import { useTradingStore } from '../../store/useTradingStore';
 import { formatUsd, truncateAddress } from '../../utils/formatters';
 import { ChainBadge, OpportunityBadge, RiskBadge } from '../common/Badge';
-import { DEMO_DEVELOPER_PROFILES, DEMO_WALLET_CLUSTERS, DEMO_RUG_RISKS } from '../../providers/demoDataProvider';
+import { providerRegistry } from '../../providers/providerRegistry';
+import { DeveloperProfile } from '../../types/developer';
+import { RugRiskAudit } from '../../types/risk';
+import { WalletCluster } from '../../types/wallet';
 import { calculateUpsideScenarios } from '../../utils/math';
 
 export const OpportunityReportModal: React.FC<{ token: Token }> = ({ token }) => {
   const { closeOpportunityReport, openTradeSetup } = useTradingStore();
 
-  const devProfile = DEMO_DEVELOPER_PROFILES[token.creatorAddress];
-  const clusters = DEMO_WALLET_CLUSTERS[token.address] || [];
+  const [devProfile, setDevProfile] = useState<DeveloperProfile | null>(null);
+  const [rugAudit, setRugAudit] = useState<RugRiskAudit | null>(null);
+  const [clusters, setClusters] = useState<WalletCluster[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      providerRegistry.developerAnalysis.analyzeDeveloper(token.creatorAddress, token.chain),
+      providerRegistry.riskAnalysis.auditTokenRisk(token.address, token.chain, token.creatorAddress),
+      providerRegistry.walletAnalysis.detectClusters(token.address, token.chain),
+    ])
+      .then(([dev, risk, cls]) => {
+        if (!cancelled) {
+          setDevProfile(dev);
+          setRugAudit(risk);
+          setClusters(cls);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load opportunity report live intelligence:', err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token.address, token.creatorAddress, token.chain]);
+
   const primaryCluster = clusters[0];
-  const rugAudit = DEMO_RUG_RISKS[token.address];
   const scenarios = calculateUpsideScenarios(token);
   const scenario5x = scenarios.find((s) => s.multiple === '5X');
   const scenario10x = scenarios.find((s) => s.multiple === '10X');

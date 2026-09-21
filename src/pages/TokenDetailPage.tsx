@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TrendingUp,
   ShieldCheck,
@@ -9,7 +9,10 @@ import {
 import { useTradingStore } from '../store/useTradingStore';
 import { formatUsd, formatPercent, truncateAddress, getExplorerUrl } from '../utils/formatters';
 import { ChainBadge, OpportunityBadge, RiskBadge } from '../components/common/Badge';
-import { DEMO_DEVELOPER_PROFILES, DEMO_RUG_RISKS, DEMO_WALLET_CLUSTERS } from '../providers/demoDataProvider';
+import { providerRegistry } from '../providers/providerRegistry';
+import { DeveloperProfile } from '../types/developer';
+import { RugRiskAudit } from '../types/risk';
+import { WalletCluster } from '../types/wallet';
 import { calculateUpsideScenarios, calculateDownsideScenarios } from '../utils/math';
 import { TradeSetupDraft, OrderType } from '../types/trade';
 
@@ -20,6 +23,35 @@ export const TokenDetailPage: React.FC = () => {
 
   // If no token selected, pick first token
   const token = selectedToken || tokens[0];
+
+  const [devProfile, setDevProfile] = useState<DeveloperProfile | null>(null);
+  const [rugAudit, setRugAudit] = useState<RugRiskAudit | null>(null);
+  const [clusters, setClusters] = useState<WalletCluster[]>([]);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+
+    Promise.all([
+      providerRegistry.developerAnalysis.analyzeDeveloper(token.creatorAddress, token.chain),
+      providerRegistry.riskAnalysis.auditTokenRisk(token.address, token.chain, token.creatorAddress),
+      providerRegistry.walletAnalysis.detectClusters(token.address, token.chain),
+    ])
+      .then(([dev, risk, cls]) => {
+        if (!cancelled) {
+          setDevProfile(dev);
+          setRugAudit(risk);
+          setClusters(cls);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load token live intelligence:', err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token?.address, token?.creatorAddress, token?.chain]);
 
   // Trade Setup Tab form state
   const defaultEntry = token ? Number((token.priceUsd * 0.95).toFixed(6)) : 0.0004;
@@ -35,15 +67,12 @@ export const TokenDetailPage: React.FC = () => {
 
   if (!token) {
     return (
-      <div className="flex-1 p-12 text-center font-mono text-slate-400">
+      <div className="flex-1 p-12 text-center font-mono text-zinc-400">
         No token selected. Please return to Discover and choose a token.
       </div>
     );
   }
 
-  const devProfile = DEMO_DEVELOPER_PROFILES[token.creatorAddress];
-  const rugAudit = DEMO_RUG_RISKS[token.address];
-  const clusters = DEMO_WALLET_CLUSTERS[token.address] || [];
   const primaryCluster = clusters[0];
   const upsideScenarios = calculateUpsideScenarios(token);
   const downsideScenarios = calculateDownsideScenarios(token);

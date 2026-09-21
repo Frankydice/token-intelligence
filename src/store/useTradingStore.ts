@@ -9,7 +9,6 @@ import { tradeSetupEngine } from '../engines/tradeSetupEngine';
 import { entryMonitorEngine } from '../engines/entryMonitorEngine';
 import { positionMonitorEngine } from '../engines/positionMonitorEngine';
 import { exitEngine } from '../engines/exitEngine';
-import { DEMO_TOKENS } from '../providers/demoDataProvider';
 import { storageService, PersistedAppSettings, DEFAULT_APP_SETTINGS } from '../services/storageService';
 import { telegramBotService } from '../services/telegramBotService';
 import { solanaWsListener, SolanaWsStatus } from '../providers/solanaWebSocketListener';
@@ -38,8 +37,8 @@ export interface TradingState {
 
 // Initial state singleton
 let globalState: TradingState = {
-  tokens: DEMO_TOKENS,
-  selectedToken: DEMO_TOKENS[1] || DEMO_TOKENS[0],
+  tokens: [],
+  selectedToken: null,
   filter: {
     chain: 'all',
     maxAgeHours: 720,
@@ -58,7 +57,7 @@ let globalState: TradingState = {
   closedPositions: [],
   auditLogs: auditLogEngine.getLogs(),
   alerts: [],
-  isDemoMode: true,
+  isDemoMode: false,
   isKillSwitchActive: false,
   reportModalToken: null,
   tradeModalToken: null,
@@ -197,14 +196,49 @@ solanaWsListener.onNewLaunch((event) => {
   }
 });
 
+async function performTokenRefresh() {
+  if (globalState.isScanning) return;
+  globalState = { ...globalState, isScanning: true };
+  notify();
+
+  try {
+    const tokens = await providerRegistry.tokenDiscovery.discoverTokens(
+      globalState.filter.chain === 'all' ? undefined : (globalState.filter.chain as Chain)
+    );
+    globalState = {
+      ...globalState,
+      tokens: tokens.length > 0 ? tokens : globalState.tokens,
+      selectedToken: globalState.selectedToken || (tokens.length > 0 ? tokens[0] : null),
+      isScanning: false,
+    };
+    notify();
+  } catch (err) {
+    console.warn('[useTradingStore] Token discovery error:', err);
+    globalState = { ...globalState, isScanning: false };
+    notify();
+  }
+}
+
 export function useTradingStore() {
   const [state, setState] = useState<TradingState>(globalState);
 
   useEffect(() => {
     hydrateStorage();
     listeners.add(setState);
+
+    if (globalState.tokens.length === 0 && !globalState.isScanning) {
+      performTokenRefresh();
+    }
+
+    const pollTimer = setInterval(() => {
+      if (!globalState.isScanning && !globalState.isKillSwitchActive) {
+        performTokenRefresh();
+      }
+    }, 45000);
+
     return () => {
       listeners.delete(setState);
+      clearInterval(pollTimer);
     };
   }, []);
 
@@ -429,42 +463,31 @@ export function useTradingStore() {
   }, []);
 
   const refreshTokens = useCallback(async () => {
-    globalState = { ...globalState, isScanning: true };
-    notify();
-
-    try {
-      const tokens = await providerRegistry.tokenDiscovery.discoverTokens(
-        globalState.filter.chain === 'all' ? undefined : (globalState.filter.chain as Chain)
-      );
-      globalState = {
-        ...globalState,
-        tokens: tokens.length > 0 ? tokens : DEMO_TOKENS,
-        isScanning: false,
-      };
-      notify();
-    } catch {
-      globalState = { ...globalState, isScanning: false };
-      notify();
-    }
+    await performTokenRefresh();
   }, []);
 
   const runFullDemoScenario = useCallback(async () => {
     if (globalState.isKillSwitchActive) {
       alertEngine.emitAlert({
-        title: 'Demo Blocked',
+        title: 'Action Blocked',
         message: 'Kill Switch is active. Disarm Kill Switch first.',
         severity: 'critical',
       });
       return;
     }
 
-    const targetToken = DEMO_TOKENS.find((t) => t.symbol === 'CYBERDOGE') || DEMO_TOKENS[1];
+    const targetToken = globalState.tokens[0];
+    if (!targetToken) {
+      refreshTokens();
+      return;
+    }
+
     setSelectedToken(targetToken);
     setActiveNav('DISCOVER');
 
     alertEngine.emitAlert({
-      title: 'Demo Scenario Initiated',
-      message: `Discovered new token $${targetToken.symbol} on ${targetToken.chain.toUpperCase()} (7 hours old).`,
+      title: 'Opportunity Inspection Initiated',
+      message: `Analyzing live market token $${targetToken.symbol} on ${targetToken.chain.toUpperCase()}.`,
       severity: 'info',
       tokenAddress: targetToken.address,
       tokenSymbol: targetToken.symbol,
@@ -472,7 +495,7 @@ export function useTradingStore() {
     });
 
     openOpportunityReport(targetToken);
-  }, [openOpportunityReport, setSelectedToken, setActiveNav]);
+  }, [openOpportunityReport, setSelectedToken, setActiveNav, refreshTokens]);
 
   const tickSimulation = useCallback(async () => {
     if (globalState.isKillSwitchActive) return;

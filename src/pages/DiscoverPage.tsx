@@ -35,6 +35,16 @@ export const DiscoverPage: React.FC = () => {
                 <TokenCard key={token.id} token={token} />
               ))}
             </div>
+          ) : isScanning ? (
+            <div className="terminal-card p-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700/60 flex items-center justify-center mx-auto text-sky-400">
+                <Sparkles className="w-6 h-6 animate-pulse" />
+              </div>
+              <h3 className="font-mono font-bold text-zinc-200">Scanning Multi-DEX Liquidity Pools...</h3>
+              <p className="font-mono text-xs text-zinc-400 max-w-md mx-auto">
+                Querying live liquidity pairs across Solana (pump.fun, Raydium) and BNB Chain (PancakeSwap). Discovered tokens will appear automatically.
+              </p>
+            </div>
           ) : (
             <div className="terminal-card p-12 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center mx-auto text-zinc-400">
@@ -49,7 +59,7 @@ export const DiscoverPage: React.FC = () => {
                 disabled={isScanning}
                 className="px-4 py-2 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-mono font-semibold transition"
               >
-                {isScanning ? 'Scanning DEX Pools...' : 'Refresh Token Discovery Feed'}
+                Scan DEX Pools Now
               </button>
             </div>
           )}

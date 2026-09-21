@@ -6,8 +6,6 @@ import { storageService } from '../services/storageService';
 
 export const SettingsPage: React.FC = () => {
   const {
-    isDemoMode,
-    setMode,
     settings,
     updateSettings,
     exportAuditLogsJson,
@@ -131,38 +129,30 @@ export const SettingsPage: React.FC = () => {
         <div className="terminal-card p-5 space-y-3">
           <h3 className="font-semibold text-zinc-100 text-sm flex items-center gap-2">
             <HardDrive className="w-4 h-4 text-sky-400" />
-            OPERATIONAL ENVIRONMENT MODE
+            LIVE PUBLIC EXECUTION ARCHITECTURE
           </h3>
           <p className="text-zinc-400 text-xs">
-            Toggle between deterministic simulation for reproducible testing and live market connections.
+            The terminal operates continuously in live market mode, ingesting real DEX liquidity pools across Solana and BNB Chain.
           </p>
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <button
-              onClick={() => setMode(true)}
-              className={`p-3 rounded-md border text-left transition ${
-                isDemoMode
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 font-semibold'
-                  : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
-              }`}
-            >
-              <div>DEMO / SIMULATION MODE</div>
-              <div className="text-[10px] text-zinc-400 font-normal mt-1">
-                Deterministic tokens, realistic simulated execution, zero capital risk.
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="p-3.5 rounded-md border border-sky-500/30 bg-sky-500/10 text-left">
+              <div className="flex items-center gap-2 text-sky-400 font-semibold text-xs">
+                <span className="w-2 h-2 rounded-full bg-sky-400"></span>
+                LIVE PAPER EXECUTION (ACTIVE PUBLIC DEFAULT)
               </div>
-            </button>
-            <button
-              onClick={() => setMode(false)}
-              className={`p-3 rounded-md border text-left transition ${
-                !isDemoMode
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-semibold'
-                  : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
-              }`}
-            >
-              <div>LIVE DATA MODE</div>
-              <div className="text-[10px] text-zinc-400 font-normal mt-1">
-                Fetches real-time pairs from DexScreener &amp; public Solana/BSC RPCs.
+              <p className="text-[11px] text-zinc-300 font-normal mt-1.5 leading-relaxed">
+                Orders monitor and execute against real-time market prices, liquidity depth, and realistic slippage modeling with zero capital risk for public users.
+              </p>
+            </div>
+            <div className="p-3.5 rounded-md border border-zinc-800 bg-zinc-950/60 text-left">
+              <div className="flex items-center gap-2 text-zinc-400 font-semibold text-xs">
+                <span className="w-2 h-2 rounded-full bg-zinc-600"></span>
+                ON-CHAIN RPC SIGNER (RESTRICTED)
               </div>
-            </button>
+              <p className="text-[11px] text-zinc-400 font-normal mt-1.5 leading-relaxed">
+                Direct blockchain transaction signing via private RPC endpoints. Requires dedicated air-gapped signer confirmation.
+              </p>
+            </div>
           </div>
         </div>
 
