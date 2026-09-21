@@ -40,10 +40,10 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#090d16] text-slate-100">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#090a0f] text-zinc-100">
       {/* Kill Switch Banner if Active */}
       {isKillSwitchActive && (
-        <div className="bg-red-600 text-white px-4 py-2 font-mono text-xs font-bold flex items-center justify-between animate-pulse">
+        <div className="bg-rose-600 text-white px-4 py-2 font-mono text-xs font-bold flex items-center justify-between animate-pulse">
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-4 h-4" />
             <span>EMERGENCY KILL SWITCH ENGAGED: ALL MONITORING &amp; EXECUTION IS FROZEN.</span>
@@ -89,22 +89,22 @@ export const App: React.FC = () => {
             key={toast.id}
             className={`pointer-events-auto p-3 rounded-lg border shadow-xl flex items-start gap-2.5 font-mono text-xs transition-all ${
               toast.severity === 'critical'
-                ? 'bg-red-950/90 border-red-700 text-red-200'
+                ? 'bg-rose-950/90 border-rose-700 text-rose-200'
                 : toast.severity === 'warning'
                 ? 'bg-amber-950/90 border-amber-700 text-amber-200'
                 : toast.severity === 'success'
                 ? 'bg-emerald-950/90 border-emerald-700 text-emerald-200'
-                : 'bg-slate-900/95 border-cyan-500/40 text-slate-200'
+                : 'bg-zinc-900/95 border-zinc-700 text-zinc-200'
             }`}
           >
-            <Bell className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+            <Bell className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
             <div className="flex-1">
               <span className="font-bold block text-white">{toast.title}</span>
-              <p className="text-[11px] text-slate-300 mt-0.5">{toast.message}</p>
+              <p className="text-[11px] text-zinc-400 mt-0.5">{toast.message}</p>
             </div>
             <button
               onClick={() => dismissToast(toast.id)}
-              className="text-slate-400 hover:text-white p-0.5"
+              className="text-zinc-400 hover:text-white p-0.5"
             >
               <X className="w-3.5 h-3.5" />
             </button>

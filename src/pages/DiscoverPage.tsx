@@ -8,7 +8,7 @@ export const DiscoverPage: React.FC = () => {
   const { filteredTokens, isScanning, refreshTokens } = useTradingStore();
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#090d16]">
+    <div className="flex-1 flex flex-col overflow-hidden bg-[#090a0f]">
       {/* Filters Toolbar */}
       <FilterToolbar />
 
@@ -18,12 +18,12 @@ export const DiscoverPage: React.FC = () => {
           {/* Section Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
-              <h2 className="font-mono font-bold text-sm text-slate-100 uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-sky-400" />
+              <h2 className="font-mono font-semibold text-sm text-zinc-100 uppercase tracking-wider">
                 DISCOVERED TOKENS ({filteredTokens.length})
               </h2>
             </div>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-zinc-400 font-mono">
               Tokens created within last 30 days • Continuously audited
             </span>
           </div>
@@ -37,17 +37,17 @@ export const DiscoverPage: React.FC = () => {
             </div>
           ) : (
             <div className="terminal-card p-12 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-slate-400">
+              <div className="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center mx-auto text-zinc-400">
                 <Sparkles className="w-6 h-6" />
               </div>
-              <h3 className="font-mono font-bold text-slate-200">No Tokens Match Active Filters</h3>
-              <p className="font-mono text-xs text-slate-400 max-w-md mx-auto">
+              <h3 className="font-mono font-bold text-zinc-200">No Tokens Match Active Filters</h3>
+              <p className="font-mono text-xs text-zinc-400 max-w-md mx-auto">
                 Try loosening your filter parameters or resetting your search query to inspect newly created DEX pairs.
               </p>
               <button
                 onClick={() => refreshTokens()}
                 disabled={isScanning}
-                className="px-4 py-2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-semibold hover:bg-cyan-500/30 transition"
+                className="px-4 py-2 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-mono font-semibold transition"
               >
                 {isScanning ? 'Scanning DEX Pools...' : 'Refresh Token Discovery Feed'}
               </button>

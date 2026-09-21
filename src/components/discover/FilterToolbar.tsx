@@ -17,7 +17,7 @@ export const FilterToolbar: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#0d1322] border-b border-slate-800 p-3 space-y-3">
+    <div className="bg-[#0c0e14] border-b border-zinc-800/80 p-3 space-y-3">
       {/* Category Pills */}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
         {categories.map((cat) => {
@@ -29,8 +29,8 @@ export const FilterToolbar: React.FC = () => {
               onClick={() => setFilter({ tag: cat.id })}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono transition-all whitespace-nowrap ${
                 isSelected
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
-                  : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  ? 'bg-zinc-800 text-zinc-100 border border-zinc-700 font-semibold shadow-sm'
+                  : 'bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 border border-zinc-800/80 hover:bg-zinc-900'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -43,25 +43,25 @@ export const FilterToolbar: React.FC = () => {
       {/* Search & Sliders Row */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
         <div className="relative flex-1 min-w-[240px] max-w-md">
-          <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
           <input
             type="text"
             placeholder="Search by name, symbol, or contract address..."
             value={filter.searchQuery || ''}
             onChange={(e) => setFilter({ searchQuery: e.target.value })}
-            className="w-full bg-slate-900 border border-slate-800 rounded-md pl-9 pr-3 py-1.5 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+            className="w-full bg-zinc-950/80 border border-zinc-800 rounded-md pl-9 pr-3 py-1.5 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition"
           />
         </div>
 
         {/* Filters: Liquidity & Chain */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <SlidersHorizontal className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1.5 text-zinc-400">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-500" />
             <span>Min Liq:</span>
             <select
               value={filter.minLiquidity}
               onChange={(e) => setFilter({ minLiquidity: Number(e.target.value) })}
-              className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-200 focus:outline-none"
+              className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-zinc-200 focus:outline-none cursor-pointer"
             >
               <option value="0">Any</option>
               <option value="10000">$10K+</option>
@@ -70,12 +70,12 @@ export const FilterToolbar: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 text-slate-400">
+          <div className="flex items-center gap-1.5 text-zinc-400">
             <span>Max Age:</span>
             <select
               value={filter.maxAgeHours}
               onChange={(e) => setFilter({ maxAgeHours: Number(e.target.value) })}
-              className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-200 focus:outline-none"
+              className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-zinc-200 focus:outline-none cursor-pointer"
             >
               <option value="24">&lt; 24 Hours</option>
               <option value="72">&lt; 3 Days</option>

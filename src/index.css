@@ -4,35 +4,40 @@
 
 @layer base {
   body {
-    background-color: #090d16;
-    color: #e2e8f0;
+    background-color: #090a0f;
+    color: #e4e4e7;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* Custom dark terminal scrollbars */
+  /* Custom refined dark terminal scrollbars */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #0d1322;
+    background: #090a0f;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e293b;
+    background: #27272a;
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: #3f3f46;
   }
 }
 
 .terminal-card {
-  background-color: #0d1322;
-  border: 1px solid #1e293b;
-  border-radius: 0.5rem;
+  background-color: #12141c;
+  border: 1px solid #1e222d;
+  border-radius: 0.625rem;
 }
 
-.terminal-card-glow {
-  box-shadow: 0 0 20px -5px rgba(0, 242, 254, 0.1);
+.terminal-card-hover {
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.terminal-card-hover:hover {
+  background-color: #161924;
+  border-color: #2b3242;
 }
 
 .pulsing-dot {

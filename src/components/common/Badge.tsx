@@ -3,34 +3,63 @@ import { RiskLevel } from '../../types/developer';
 import { Chain } from '../../types/token';
 
 export const RiskBadge: React.FC<{ level: RiskLevel; size?: 'sm' | 'md' }> = ({ level, size = 'sm' }) => {
-  const styles: Record<RiskLevel, string> = {
-    'LOW CONCERN': 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60',
-    'WATCH': 'bg-amber-950/80 text-amber-300 border-amber-800/60',
-    'HIGH RISK': 'bg-rose-950/80 text-rose-300 border-rose-800/60',
-    'CRITICAL RISK': 'bg-red-950 text-red-400 border-red-600 animate-pulse font-bold',
+  const styles: Record<RiskLevel, { bg: string; dot: string; text: string }> = {
+    'LOW CONCERN': {
+      bg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+      dot: 'bg-emerald-400',
+      text: 'LOW CONCERN',
+    },
+    'WATCH': {
+      bg: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+      dot: 'bg-amber-400',
+      text: 'WATCH',
+    },
+    'HIGH RISK': {
+      bg: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+      dot: 'bg-rose-400',
+      text: 'HIGH RISK',
+    },
+    'CRITICAL RISK': {
+      bg: 'bg-rose-950/50 border-rose-600/40 text-rose-300 font-semibold',
+      dot: 'bg-rose-500 animate-pulse',
+      text: 'CRITICAL RISK',
+    },
   };
 
-  const pad = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm';
+  const current = styles[level] || styles['WATCH'];
+  const pad = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
 
   return (
-    <span className={`inline-flex items-center gap-1 font-mono uppercase tracking-wider rounded border ${pad} ${styles[level] || styles['WATCH']}`}>
-      <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-      {level}
+    <span className={`inline-flex items-center gap-1.5 font-mono uppercase tracking-wider rounded border ${pad} ${current.bg}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${current.dot}`}></span>
+      {current.text}
     </span>
   );
 };
 
 export const OpportunityBadge: React.FC<{ score: number; size?: 'sm' | 'md' }> = ({ score, size = 'sm' }) => {
-  let color = 'bg-slate-800 text-slate-300 border-slate-700';
-  if (score >= 80) color = 'bg-cyan-950/80 text-cyan-300 border-cyan-700';
-  else if (score >= 65) color = 'bg-emerald-950/80 text-emerald-300 border-emerald-700';
-  else if (score >= 45) color = 'bg-blue-950/80 text-blue-300 border-blue-700';
+  let color = 'bg-zinc-800/80 text-zinc-300 border-zinc-700/50';
+  let dot = 'bg-zinc-400';
+  if (score >= 80) {
+    color = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    dot = 'bg-emerald-400';
+  } else if (score >= 65) {
+    color = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+    dot = 'bg-sky-400';
+  } else if (score >= 40) {
+    color = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+    dot = 'bg-amber-400';
+  } else {
+    color = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+    dot = 'bg-rose-400';
+  }
 
-  const pad = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm';
+  const pad = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
 
   return (
-    <span className={`inline-flex items-center gap-1 font-mono rounded border ${pad} ${color}`}>
-      <span className="text-[10px] text-slate-400">OPP:</span>
+    <span className={`inline-flex items-center gap-1.5 font-mono rounded border ${pad} ${color}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`}></span>
+      <span className="text-zinc-500 font-medium">OPP</span>
       <span className="font-bold">{score}/100</span>
     </span>
   );
@@ -39,7 +68,7 @@ export const OpportunityBadge: React.FC<{ score: number; size?: 'sm' | 'md' }> =
 export const ChainBadge: React.FC<{ chain: Chain }> = ({ chain }) => {
   if (chain === 'solana') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold bg-emerald-950/70 text-emerald-300 border border-emerald-800/60">
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-zinc-800/80 text-zinc-300 border border-zinc-700/50">
         <span className="w-1.5 h-1.5 rounded-full bg-[#14f195]"></span>
         SOLANA
       </span>
@@ -47,14 +76,15 @@ export const ChainBadge: React.FC<{ chain: Chain }> = ({ chain }) => {
   }
   if (chain === 'bsc') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold bg-amber-950/70 text-amber-300 border border-amber-800/60">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#f3ba2f]"></span>
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-zinc-800/80 text-zinc-300 border border-zinc-700/50">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span>
         BNB CHAIN
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-zinc-800/80 text-zinc-300 border border-zinc-700/50">
+      <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
       {chain.toUpperCase()}
     </span>
   );

@@ -2,20 +2,23 @@ import { Chain } from '../types/token';
 
 export function formatUsd(val: number, decimals: number = 2): string {
   if (val === undefined || val === null || isNaN(val)) return '$0.00';
-  if (val >= 1_000_000_000) {
-    return `$${(val / 1_000_000_000).toFixed(2)}B`;
+  if (val === 0 || Math.abs(val) < 0.0000001) return '$0.00';
+  const abs = Math.abs(val);
+  const sign = val < 0 ? '-' : '';
+  if (abs >= 1_000_000_000) {
+    return `${sign}$${(abs / 1_000_000_000).toFixed(2)}B`;
   }
-  if (val >= 1_000_000) {
-    return `$${(val / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000_000) {
+    return `${sign}$${(abs / 1_000_000).toFixed(2)}M`;
   }
-  if (val >= 10_000) {
-    return `$${(val / 1_000).toFixed(1)}K`;
+  if (abs >= 10_000) {
+    return `${sign}$${(abs / 1_000).toFixed(1)}K`;
   }
-  if (val < 0.000001) {
-    return `$${val.toExponential(4)}`;
+  if (abs < 0.000001) {
+    return `${sign}$${abs.toExponential(4)}`;
   }
-  if (val < 0.01) {
-    return `$${val.toFixed(6)}`;
+  if (abs < 0.01) {
+    return `${sign}$${abs.toFixed(6)}`;
   }
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
