@@ -33,6 +33,8 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
     toggleKillSwitch,
     solanaWsStatus,
     toggleSolanaWs,
+    robinhoodChainStatus,
+    toggleRobinhoodChain,
   } = useTradingStore();
 
   const { resolvedTheme, toggleTheme } = useTheme();
@@ -86,48 +88,62 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
           </button>
         </div>
 
-        {/* Quick Actions Row: Theme Toggle + Solana WSS */}
-        <div className="grid grid-cols-2 gap-2 font-mono text-xs">
+        {/* Quick Actions Row: Theme Toggle + Solana WSS + Robinhood L2 */}
+        <div className="grid grid-cols-3 gap-2 font-mono text-xs">
           {/* Theme Switcher Button */}
           <button
             onClick={toggleTheme}
-            className="p-3 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/60 flex items-center justify-between text-left hover:border-slate-300 dark:hover:border-zinc-700 transition"
+            className="p-2 sm:p-2.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/60 flex flex-col justify-between text-left hover:border-slate-300 dark:hover:border-zinc-700 transition"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 mb-1">
               {resolvedTheme === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-400" />
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
               ) : (
-                <Moon className="w-4 h-4 text-slate-700" />
+                <Moon className="w-3.5 h-3.5 text-slate-700" />
               )}
-              <div>
-                <span className="block font-medium text-slate-900 dark:text-zinc-100 text-[11px]">
-                  {resolvedTheme === 'dark' ? 'LIGHT MODE' : 'DARK MODE'}
-                </span>
-                <span className="text-[9px] text-slate-400 dark:text-zinc-500">
-                  Currently {resolvedTheme.toUpperCase()}
-                </span>
-              </div>
+              <span className="font-medium text-slate-900 dark:text-zinc-100 text-[10px]">
+                THEME
+              </span>
             </div>
+            <span className="text-[9px] text-slate-400 dark:text-zinc-500">
+              {resolvedTheme.toUpperCase()}
+            </span>
           </button>
 
           {/* Solana WSS Toggle */}
           <button
             onClick={() => toggleSolanaWs(solanaWsStatus !== 'CONNECTED')}
-            className={`p-3 rounded-lg border text-left flex items-center justify-between transition ${
+            className={`p-2 sm:p-2.5 rounded-lg border text-left flex flex-col justify-between transition ${
               solanaWsStatus === 'CONNECTED'
                 ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                 : 'border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/60 text-slate-600 dark:text-zinc-400'
             }`}
           >
-            <div>
-              <div className="flex items-center gap-1.5 font-medium text-[11px]">
-                <span className={`w-1.5 h-1.5 rounded-full ${solanaWsStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                <span>SOL WSS</span>
-              </div>
-              <span className="text-[9px] block text-slate-400 dark:text-zinc-500 mt-0.5">
-                {solanaWsStatus}
-              </span>
+            <div className="flex items-center gap-1.5 font-medium text-[10px] mb-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${solanaWsStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+              <span>SOL WSS</span>
             </div>
+            <span className="text-[9px] block text-slate-400 dark:text-zinc-500">
+              {solanaWsStatus}
+            </span>
+          </button>
+
+          {/* Robinhood L2 Toggle */}
+          <button
+            onClick={() => toggleRobinhoodChain(robinhoodChainStatus !== 'CONNECTED')}
+            className={`p-2 sm:p-2.5 rounded-lg border text-left flex flex-col justify-between transition ${
+              robinhoodChainStatus === 'CONNECTED'
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                : 'border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/60 text-slate-600 dark:text-zinc-400'
+            }`}
+          >
+            <div className="flex items-center gap-1.5 font-medium text-[10px] mb-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${robinhoodChainStatus === 'CONNECTED' ? 'bg-[#00c805] animate-pulse' : 'bg-slate-400'}`} />
+              <span>RH L2</span>
+            </div>
+            <span className="text-[9px] block text-slate-400 dark:text-zinc-500">
+              {robinhoodChainStatus}
+            </span>
           </button>
         </div>
 

@@ -1,4 +1,4 @@
-export type Chain = 'solana' | 'bsc' | 'base' | 'ethereum';
+export type Chain = 'solana' | 'bsc' | 'robinhood' | 'base' | 'ethereum';
 
 export type TokenTag = 'new' | 'hot' | 'watchlist' | 'high_risk' | 'dev_alert' | 'smart_money' | 'urgent_dump' | 'cluster_buying';
 

@@ -70,6 +70,10 @@ export function getExplorerUrl(address: string, chain: Chain, type: 'token' | 'a
     if (type === 'tx') return `https://bscscan.com/tx/${address}`;
     return `https://bscscan.com/token/${address}`;
   }
+  if (chain === 'robinhood') {
+    if (type === 'tx') return `https://explorer.robinhood.com/tx/${address}`;
+    return `https://explorer.robinhood.com/token/${address}`;
+  }
   if (chain === 'base') {
     if (type === 'tx') return `https://basescan.org/tx/${address}`;
     return `https://basescan.org/token/${address}`;

@@ -22,6 +22,8 @@ export const SettingsPage: React.FC = () => {
   const [solanaRpc, setSolanaRpc] = useState<string>(settings.solanaRpcUrl);
   const [bscRpc, setBscRpc] = useState<string>(settings.bscRpcUrl);
   const [solanaWs, setSolanaWs] = useState<string>(settings.solanaWsUrl);
+  const [robinhoodRpc, setRobinhoodRpc] = useState<string>(settings.robinhoodRpcUrl || 'https://rpc.robinhood.com');
+  const [robinhoodWs, setRobinhoodWs] = useState<string>(settings.robinhoodWsUrl || 'wss://rpc.robinhood.com/ws');
 
   // Telegram state
   const [telegramToken, setTelegramToken] = useState<string>(settings.telegramBotToken || '');
@@ -42,6 +44,8 @@ export const SettingsPage: React.FC = () => {
     setSolanaRpc(settings.solanaRpcUrl);
     setBscRpc(settings.bscRpcUrl);
     setSolanaWs(settings.solanaWsUrl);
+    setRobinhoodRpc(settings.robinhoodRpcUrl || 'https://rpc.robinhood.com');
+    setRobinhoodWs(settings.robinhoodWsUrl || 'wss://rpc.robinhood.com/ws');
     setTelegramToken(settings.telegramBotToken || '');
     setTelegramChatId(settings.telegramChatId || '');
     setTelegramEnabled(settings.telegramAlertsEnabled);
@@ -55,6 +59,8 @@ export const SettingsPage: React.FC = () => {
       solanaRpcUrl: solanaRpc,
       bscRpcUrl: bscRpc,
       solanaWsUrl: solanaWs,
+      robinhoodRpcUrl: robinhoodRpc,
+      robinhoodWsUrl: robinhoodWs,
       telegramBotToken: telegramToken,
       telegramChatId: telegramChatId,
       telegramAlertsEnabled: telegramEnabled,
@@ -439,6 +445,26 @@ export const SettingsPage: React.FC = () => {
                 onChange={(e) => setBscRpc(e.target.value)}
                 className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
               />
+            </div>
+            <div>
+              <label className="text-[var(--text-primary)] block mb-1 font-medium">Robinhood Chain RPC (Arbitrum Orbit L2)</label>
+              <input
+                type="text"
+                value={robinhoodRpc}
+                onChange={(e) => setRobinhoodRpc(e.target.value)}
+                className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
+              />
+              <span className="text-[10px] text-[var(--text-muted)] mt-1 block">EVM Arbitrum Orbit L2 node for Robinhood Swap &amp; Tokenized Stocks.</span>
+            </div>
+            <div>
+              <label className="text-[var(--text-primary)] block mb-1 font-medium">Robinhood Chain WebSocket Stream</label>
+              <input
+                type="text"
+                value={robinhoodWs}
+                onChange={(e) => setRobinhoodWs(e.target.value)}
+                className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
+              />
+              <span className="text-[10px] text-[var(--text-muted)] mt-1 block">Sub-second PairCreated and RWA mint log stream.</span>
             </div>
           </div>
         </div>

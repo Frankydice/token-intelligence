@@ -8,6 +8,8 @@ export interface PersistedAppSettings {
   solanaRpcUrl: string;
   bscRpcUrl: string;
   solanaWsUrl: string;
+  robinhoodRpcUrl: string;
+  robinhoodWsUrl: string;
   telegramBotToken?: string;
   telegramChatId?: string;
   telegramAlertsEnabled: boolean;
@@ -20,6 +22,8 @@ export const DEFAULT_APP_SETTINGS: PersistedAppSettings = {
   solanaRpcUrl: 'https://api.mainnet-beta.solana.com',
   bscRpcUrl: 'https://bsc-dataseed.binance.org',
   solanaWsUrl: 'wss://api.mainnet-beta.solana.com',
+  robinhoodRpcUrl: 'https://rpc.robinhood.com',
+  robinhoodWsUrl: 'wss://rpc.robinhood.com/ws',
   telegramBotToken: '',
   telegramChatId: '',
   telegramAlertsEnabled: false,

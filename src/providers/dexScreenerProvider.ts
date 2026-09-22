@@ -72,6 +72,9 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
       if (!chain || chain === 'bsc') {
         searchQueries.push('pancakeswap');
       }
+      if (!chain || chain === 'robinhood') {
+        searchQueries.push('robinhood', 'orbit');
+      }
 
       const fetchedPairs: DexScreenerPair[] = [];
 
@@ -105,6 +108,7 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
         let mappedChain: Chain | null = null;
         if (pair.chainId === 'solana') mappedChain = 'solana';
         else if (pair.chainId === 'bsc') mappedChain = 'bsc';
+        else if (pair.chainId === 'robinhood' || pair.dexId?.includes('robinhood')) mappedChain = 'robinhood';
         else if (pair.chainId === 'base') mappedChain = 'base';
         else if (pair.chainId === 'ethereum') mappedChain = 'ethereum';
 

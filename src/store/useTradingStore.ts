@@ -12,6 +12,7 @@ import { exitEngine } from '../engines/exitEngine';
 import { storageService, PersistedAppSettings, DEFAULT_APP_SETTINGS } from '../services/storageService';
 import { telegramBotService } from '../services/telegramBotService';
 import { solanaWsListener, SolanaWsStatus } from '../providers/solanaWebSocketListener';
+import { robinhoodChainListener, RobinhoodChainStatus } from '../providers/robinhoodChainListener';
 
 export interface TradingState {
   tokens: Token[];
@@ -32,6 +33,7 @@ export interface TradingState {
   isScanning: boolean;
   simulationRunning: boolean;
   solanaWsStatus: SolanaWsStatus;
+  robinhoodChainStatus: RobinhoodChainStatus;
   settings: PersistedAppSettings;
 }
 
@@ -65,6 +67,7 @@ let globalState: TradingState = {
   isScanning: false,
   simulationRunning: true,
   solanaWsStatus: solanaWsListener.getStatus(),
+  robinhoodChainStatus: robinhoodChainListener.getStatus(),
   settings: DEFAULT_APP_SETTINGS,
 };
 
@@ -111,10 +114,14 @@ async function hydrateStorage() {
       if (savedSettings.solanaWsUrl) {
         solanaWsListener.setEndpoint(savedSettings.solanaWsUrl);
       }
+      if (savedSettings.robinhoodWsUrl) {
+        robinhoodChainListener.setEndpoint(savedSettings.robinhoodWsUrl);
+      }
     }
 
-    // Auto-connect Solana real-time WebSocket on terminal startup
+    // Auto-connect Solana & Robinhood real-time streams on terminal startup
     solanaWsListener.connect();
+    robinhoodChainListener.connect();
 
     notify();
   } catch (err) {
@@ -204,6 +211,50 @@ solanaWsListener.onNewLaunch((event) => {
 
 // Auto-start Solana WebSocket connection on application load
 solanaWsListener.connect();
+
+// Wire up Robinhood Chain real-time launch stream
+robinhoodChainListener.onStatusChange((status) => {
+  globalState = { ...globalState, robinhoodChainStatus: status };
+  notify();
+});
+
+robinhoodChainListener.onNewLaunch((event) => {
+  const token = robinhoodChainListener.createTokenFromLaunch(event);
+
+  // Add to front of tokens list if not already present
+  if (!globalState.tokens.some((t) => t.address === token.address)) {
+    globalState = {
+      ...globalState,
+      tokens: [token, ...globalState.tokens],
+    };
+
+    auditLogEngine.recordEntry({
+      action: 'TOKEN_DISCOVERED',
+      summary: `Robinhood Chain L2 Token Detected: $${token.symbol}`,
+      details: `Platform: ${event.platform.toUpperCase()} • Contract: ${token.address.slice(0, 18)}...`,
+      tokenAddress: token.address,
+      tokenSymbol: token.symbol,
+      chain: 'robinhood',
+      actor: 'BOT_AUTONOMOUS',
+      isDemo: false,
+    });
+
+    alertEngine.emitAlert({
+      title: `Robinhood L2 Token Initialized: $${token.symbol}`,
+      message: `Verified deployment on Arbitrum Orbit. Opportunity audit initiated.`,
+      severity: 'info',
+      tokenAddress: token.address,
+      tokenSymbol: token.symbol,
+      chain: 'robinhood',
+      actionAvailable: 'REVIEW_REPORT',
+    });
+
+    notify();
+  }
+});
+
+// Auto-start Robinhood Chain listener on application load
+robinhoodChainListener.connect();
 
 async function performTokenRefresh() {
   if (globalState.isScanning) return;
@@ -649,6 +700,9 @@ export function useTradingStore() {
     if (newSettings.solanaWsUrl) {
       solanaWsListener.setEndpoint(newSettings.solanaWsUrl);
     }
+    if (newSettings.robinhoodWsUrl) {
+      robinhoodChainListener.setEndpoint(newSettings.robinhoodWsUrl);
+    }
     telegramBotService.setConfig({
       botToken: merged.telegramBotToken || '',
       chatId: merged.telegramChatId || '',
@@ -664,6 +718,16 @@ export function useTradingStore() {
       solanaWsListener.connect();
     } else {
       solanaWsListener.disconnect();
+    }
+  }, []);
+
+  // Connect or Disconnect Robinhood Chain WebSocket / RPC stream
+  const toggleRobinhoodChain = useCallback((connect: boolean) => {
+    if (connect) {
+      robinhoodChainListener.setEndpoint(globalState.settings.robinhoodWsUrl);
+      robinhoodChainListener.connect();
+    } else {
+      robinhoodChainListener.disconnect();
     }
   }, []);
 
@@ -735,6 +799,7 @@ export function useTradingStore() {
     tickSimulation,
     updateSettings,
     toggleSolanaWs,
+    toggleRobinhoodChain,
     simulateTelegramApproval,
     exportAuditLogsJson,
   };

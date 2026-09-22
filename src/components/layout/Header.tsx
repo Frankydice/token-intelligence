@@ -18,6 +18,8 @@ export const Header: React.FC = () => {
     isScanning,
     solanaWsStatus,
     toggleSolanaWs,
+    robinhoodChainStatus,
+    toggleRobinhoodChain,
   } = useTradingStore();
 
   const { resolvedTheme, toggleTheme } = useTheme();
@@ -63,6 +65,22 @@ export const Header: React.FC = () => {
                 SOL WSS: {solanaWsStatus}
               </button>
 
+              {/* Robinhood L2 on Desktop */}
+              <button
+                onClick={() => toggleRobinhoodChain(robinhoodChainStatus !== 'CONNECTED')}
+                className={`hidden md:flex px-2 py-0.5 rounded text-[10px] font-mono items-center gap-1.5 border transition ${
+                  robinhoodChainStatus === 'CONNECTED'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                    : robinhoodChainStatus === 'CONNECTING'
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 animate-pulse'
+                    : 'bg-slate-100 dark:bg-zinc-800/60 text-slate-500 dark:text-zinc-400 border-slate-200 dark:border-zinc-700/50'
+                }`}
+                title="Robinhood Chain Arbitrum Orbit L2 RPC stream. Click to connect or disconnect."
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${robinhoodChainStatus === 'CONNECTED' ? 'bg-[#00c805] animate-pulse' : 'bg-slate-400'}`}></span>
+                RH L2: {robinhoodChainStatus}
+              </button>
+
               {/* Device Detection Pill */}
               <span
                 className="hidden xl:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/50"
@@ -75,14 +93,14 @@ export const Header: React.FC = () => {
 
             <p className="hidden md:flex text-[11px] text-slate-500 dark:text-zinc-400 font-mono items-center gap-1.5 mt-0.5">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-              HUMAN-IN-THE-LOOP TERMINAL • SOLANA &amp; BNB CHAIN
+              HUMAN-IN-THE-LOOP TERMINAL • SOLANA • BNB CHAIN • ROBINHOOD
             </p>
           </div>
         </div>
 
         {/* Center: Quick Chain Selector (Desktop Only) */}
         <div className="hidden lg:flex items-center bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-0.5 text-xs font-mono">
-          {(['all', 'solana', 'bsc'] as const).map((ch) => (
+          {(['all', 'solana', 'bsc', 'robinhood'] as const).map((ch) => (
             <button
               key={ch}
               onClick={() => setFilter({ chain: ch })}
@@ -92,7 +110,7 @@ export const Header: React.FC = () => {
                   : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
               }`}
             >
-              {ch === 'all' ? 'ALL CHAINS' : ch === 'solana' ? 'SOLANA' : 'BNB CHAIN'}
+              {ch === 'all' ? 'ALL CHAINS' : ch === 'solana' ? 'SOLANA' : ch === 'bsc' ? 'BNB CHAIN' : 'ROBINHOOD'}
             </button>
           ))}
         </div>

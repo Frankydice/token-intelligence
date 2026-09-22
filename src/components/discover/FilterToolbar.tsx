@@ -20,7 +20,49 @@ export const FilterToolbar: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-[#0c0e14] border-b border-slate-200 dark:border-zinc-800/80 p-2.5 sm:p-3 space-y-2.5 sm:space-y-3 transition-colors">
-      {/* Category Pills */}
+      {/* Network Selector Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 border-b border-slate-100 dark:border-zinc-800/60 pb-2">
+        <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono uppercase tracking-wider font-semibold mr-1 shrink-0">
+          NETWORK:
+        </span>
+        {(['all', 'solana', 'bsc', 'robinhood'] as const).map((ch) => {
+          const isSelected = (filter.chain || 'all') === ch;
+          return (
+            <button
+              key={ch}
+              onClick={() => setFilter({ chain: ch })}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono transition whitespace-nowrap shrink-0 ${
+                isSelected
+                  ? ch === 'robinhood'
+                    ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-zinc-950 font-semibold shadow-sm'
+                    : 'bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm border border-slate-900 dark:border-zinc-700'
+                  : 'bg-slate-100 dark:bg-zinc-900/60 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 border border-slate-200 dark:border-zinc-800/80'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  ch === 'solana'
+                    ? 'bg-[#14f195]'
+                    : ch === 'bsc'
+                    ? 'bg-[#f59e0b]'
+                    : ch === 'robinhood'
+                    ? 'bg-[#00c805] animate-pulse'
+                    : 'bg-sky-400'
+                }`}
+              />
+              <span>
+                {ch === 'all'
+                  ? 'ALL NETWORKS'
+                  : ch === 'solana'
+                  ? 'SOLANA'
+                  : ch === 'bsc'
+                  ? 'BNB CHAIN'
+                  : 'ROBINHOOD L2'}
+              </span>
+            </button>
+          );
+        })}
+      </div>
       <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
         {categories.map((cat) => {
           const Icon = cat.icon;

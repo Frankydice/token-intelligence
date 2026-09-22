@@ -26,9 +26,8 @@ describe('Opportunity Scoring Engine Tests', () => {
     expect(opp.positiveFactors.length).toBeGreaterThan(0);
     expect(opp.positiveFactors.some((p) => p.factor.includes('Holder'))).toBe(true);
   });
-
   it('should penalize tokens with critical risk and heavy sell pressure', () => {
-    const token = DEMO_TOKENS[3]; // SMYIELD (Critical Risk)
+    const token = DEMO_TOKENS.find((t) => t.symbol === 'SMYIELD') || DEMO_TOKENS[0]; // SMYIELD (Critical Risk)
     const risk = {
       tokenAddress: token.address,
       chain: token.chain,

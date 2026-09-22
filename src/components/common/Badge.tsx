@@ -77,6 +77,14 @@ export const ChainBadge: React.FC<{ chain: Chain }> = ({ chain }) => {
       </span>
     );
   }
+  if (chain === 'robinhood') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#00c805] shrink-0 animate-pulse"></span>
+        <span>ROBINHOOD</span>
+      </span>
+    );
+  }
   return (
     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800/80 dark:text-zinc-300 dark:border-zinc-700/60">
       <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0"></span>
