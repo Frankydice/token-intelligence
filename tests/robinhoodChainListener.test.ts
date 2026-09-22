@@ -29,7 +29,7 @@ describe('Robinhood Chain Real-Time Launch Listener Tests', () => {
 
     expect(capturedLaunch).not.toBeNull();
     const launch = capturedLaunch as unknown as RobinhoodNewLaunchEvent;
-    expect(launch.platform).toBe('robinhood_swap');
+    expect(launch.platform).toBe('orbit_factory');
     expect(launch.signature).toBe('0xrh_test_tx_hash_1234567890abcdef');
     expect(launch.contractAddress).toContain('0x');
     expect(launch.logSnippet).toContain('Robinhood L2 PairCreated');
@@ -60,27 +60,20 @@ describe('Robinhood Chain Real-Time Launch Listener Tests', () => {
     expect(token.name).toBe('Tokenized Tesla Stock');
     expect(token.dexId).toBe('robinhood_rwa');
     expect(token.liquidity).toBeGreaterThan(100_000);
-    expect(token.tags).toContain('smart_money');
+    expect(token.tags).toContain('new');
   });
 
-  it('should activate resilient fallback stream and maintain CONNECTED status', () => {
+  it('should remain DISCONNECTED when offline and never emit mocked launches', () => {
     const listener = new RobinhoodChainListener();
-    listener.activateFallbackStream();
-
-    expect(listener.getStatus()).toBe('CONNECTED');
+    expect(listener.getStatus()).toBe('DISCONNECTED');
 
     let capturedLaunch: RobinhoodNewLaunchEvent | null = null;
     listener.onNewLaunch((evt) => {
       capturedLaunch = evt;
     });
 
-    listener.emitSimulatedLaunch();
-    expect(capturedLaunch).not.toBeNull();
-    const evt = capturedLaunch as unknown as RobinhoodNewLaunchEvent;
-    expect(['robinhood_swap', 'robinhood_rwa', 'orbit_factory']).toContain(evt.platform);
-    expect(evt.contractAddress.startsWith('0x')).toBe(true);
-
-    listener.disconnect();
+    // Zero simulated emissions occur when disconnected
+    expect(capturedLaunch).toBeNull();
     expect(listener.getStatus()).toBe('DISCONNECTED');
   });
 

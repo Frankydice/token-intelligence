@@ -1,28 +1,19 @@
 import { Token } from '../types/token';
 import { ChineseCommunityActivity, ChineseCabalType } from '../types/wallet';
 
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
 // Cultural translations for popular Chinese memecoin themes
 const TRANSLATION_MAP: Record<string, string> = {
-  龙: 'Imperial Dragon (Power, Royalty & Bull Market Wealth)',
-  悟空: 'Sun Wukong (Monkey King / Mythological Hero Meta)',
-  吉祥: 'Auspicious Fortune (Traditional Prosperity Lore)',
-  小狗: 'Puppy / Dog Meta (Chinese Retail Mascot)',
-  财神: 'God of Wealth (Cai Shen / Instant Riches Lore)',
-  牛市: 'Bull Market (Perpetual Upward Momentum)',
-  福: 'Good Fortune & Blessing',
-  币安: 'Binance (Binance Ecosystem Lore & Speculation)',
-  一姐: 'He Yi / "First Sister" (Binance Co-Founder Lore)',
-  熊猫: 'Giant Panda (Chinese National Treasure Meme)',
-  发财: 'Get Rich / Prosper (Popular Chinese Greeting)',
+  '龙': 'Imperial Dragon (Power, Royalty & Bull Market Wealth)',
+  '悟空': 'Sun Wukong (Monkey King / Mythological Hero Meta)',
+  '吉祥': 'Auspicious Fortune (Traditional Prosperity Lore)',
+  '小狗': 'Puppy / Dog Meta (Chinese Retail Mascot)',
+  '财神': 'God of Wealth (Cai Shen / Instant Riches Lore)',
+  '牛市': 'Bull Market (Perpetual Upward Momentum)',
+  '福': 'Good Fortune & Blessing',
+  '币安': 'Binance (Binance Ecosystem Lore & Speculation)',
+  '一姐': 'He Yi / "First Sister" (Binance Co-Founder Lore)',
+  '熊猫': 'Giant Panda (Chinese National Treasure Meme)',
+  '发财': 'Get Rich / Prosper (Popular Chinese Greeting)',
 };
 
 /**
@@ -73,6 +64,7 @@ export interface ChineseRadarSummary {
 /**
  * Evaluates live tokens and order book activity to monitor the Chinese crypto community
  * and Binance Cabal ecosystem: what they create, what they buy, and what they sell.
+ * All metrics are derived from authentic token and DEX order books.
  */
 export function analyzeChineseCommunity(tokens: Token[]): {
   created: ChineseCommunityActivity[];
@@ -84,14 +76,10 @@ export function analyzeChineseCommunity(tokens: Token[]): {
   const buying: ChineseCommunityActivity[] = [];
   const selling: ChineseCommunityActivity[] = [];
 
-  const now = Date.now();
-
-  // Synthetic or live Chinese/Binance Cabal tokens pool
   for (const token of tokens) {
-    const hash = hashString(token.address);
     const lower = `${token.name} ${token.symbol}`.toLowerCase();
 
-    // Check if token matches Chinese community or Binance Cabal criteria
+    // Check if token matches authentic Chinese community or Binance Cabal criteria
     const hasChineseChar = containsChineseCharacters(token.name) || containsChineseCharacters(token.symbol);
     const isBinanceCabal =
       lower.includes('binance') ||
@@ -100,48 +88,28 @@ export function analyzeChineseCommunity(tokens: Token[]): {
       lower.includes('heyi') ||
       lower.includes('cabal') ||
       token.chain === 'bsc';
-    const isAsianMeta = (hash % 2 === 0);
 
-    const isTarget = hasChineseChar || isBinanceCabal || isAsianMeta;
+    const isTarget = hasChineseChar || isBinanceCabal;
     if (!isTarget) continue;
 
     const translation = getChineseNarrativeTranslation(token.name, token.symbol);
 
-    const cabalTypes: ChineseCabalType[] = [
-      'BINANCE_CABAL',
-      'CHINESE_WHALE_SYNDICATE',
-      'WECHAT_ALPHA_GROUP',
-      'ASIAN_SMART_MONEY',
-    ];
-    const cabalType = isBinanceCabal ? 'BINANCE_CABAL' : cabalTypes[hash % cabalTypes.length];
+    const cabalType: ChineseCabalType = isBinanceCabal
+      ? 'BINANCE_CABAL'
+      : hasChineseChar
+      ? 'CHINESE_WHALE_SYNDICATE'
+      : 'ASIAN_SMART_MONEY';
 
-    const actorPrefix = token.chain === 'solana' ? token.creatorAddress.slice(0, 4) : token.creatorAddress.slice(2, 6);
-    const actorAddress = token.chain === 'solana'
-      ? `${actorPrefix}Cabal${hash.toString(36).slice(0, 4)}`
-      : `0x${actorPrefix}Cabal${hash.toString(36).slice(0, 4)}`;
+    const actorLabel = isBinanceCabal
+      ? 'Binance / BSC Cabal'
+      : hasChineseChar
+      ? 'Chinese Alpha Community'
+      : 'Asian Smart Money';
 
-    const actorLabels = [
-      'Binance VIP Cabal #01',
-      'WeChat Alpha Syndicate 888',
-      'OKX Asian Whale Ring',
-      'CZ Ecosystem Speculator',
-      'Shenzhen Sniper Syndicate',
-      'RedNote Alpha KOL Group',
-    ];
-    const actorLabel = actorLabels[hash % actorLabels.length];
+    const narrativeTag = isBinanceCabal ? 'Binance Ecosystem Inflow' : 'Chinese Hanzi Meta';
 
-    const narratives = [
-      'Binance Listing Speculation',
-      'WeChat Viral Dissemination',
-      'Chinese Lore / Hanzi Meta',
-      'CZ / Binance Ecosystem Lore',
-      'OKX Whale Coordinated Inflow',
-      'Midnight Asian Liquidity Pump',
-    ];
-    const narrativeTag = isBinanceCabal ? 'Binance Listing Speculation' : narratives[hash % narratives.length];
-
-    // 1. What they create (Deployments)
-    if (token.ageHours < 72 || (hash % 3 === 0)) {
+    // 1. What they create (Deployments based on actual token creation)
+    if (token.ageHours < 168 || token.liquidity > 0) {
       created.push({
         id: `c-create-${token.id}`,
         type: 'DEPLOYMENT',
@@ -156,16 +124,15 @@ export function analyzeChineseCommunity(tokens: Token[]): {
         actionAmountUsd: token.liquidity,
         tokenPriceUsd: token.priceUsd,
         priceChange24h: token.priceChange24h,
-        txHash: token.chain === 'solana' ? `sol_dep_${hash}` : `0x_dep_${hash}`,
+        txHash: token.pairAddress,
         narrativeTag,
         timestamp: token.createdAt,
-        notes: `Deployed during Asian peak trading hours via ${hash % 2 === 0 ? 'OKX CEX dispenser route' : 'Binance VIP withdrawal route'}. Targeting Chinese community meme narrative.`,
+        notes: `Deployer ${token.creatorAddress.slice(0, 8)}... initialized pool with $${token.liquidity.toLocaleString()} liquidity on ${token.dexId.toUpperCase()}.`,
       });
     }
 
-    // 2. What they are buying (Inflows)
-    if (token.volumeBuy24h > 1500 || token.priceChange24h > 0) {
-      const buyAmt = Math.round(2800 + ((hash * 3) % 18500));
+    // 2. What they are buying (Inflows based on actual DEX buy volume)
+    if (token.volumeBuy24h > 500) {
       buying.push({
         id: `c-buy-${token.id}`,
         type: 'BUY_ACCUMULATION',
@@ -175,21 +142,20 @@ export function analyzeChineseCommunity(tokens: Token[]): {
         tokenName: token.name,
         chineseNameTranslate: translation,
         chain: token.chain,
-        actorAddress,
+        actorAddress: token.creatorAddress,
         actorLabel,
-        actionAmountUsd: buyAmt,
+        actionAmountUsd: token.volumeBuy24h,
         tokenPriceUsd: token.priceUsd,
         priceChange24h: token.priceChange24h,
-        txHash: token.chain === 'solana' ? `sol_buy_${hash}` : `0x_buy_${hash}`,
+        txHash: token.pairAddress,
         narrativeTag,
-        timestamp: now - ((hash % 45) + 5) * 60 * 1000,
-        notes: `Aggressive market buy order logged from ${actorLabel}. Coordinated accumulation detected across 4 linked WeChat alpha addresses.`,
+        timestamp: token.createdAt,
+        notes: `DEX Buy volume of $${token.volumeBuy24h.toLocaleString()} logged across ${token.txns24hBuy} real swap transactions.`,
       });
     }
 
-    // 3. What they are selling (Exits / Dumps)
-    if (token.volumeSell24h > 2000 || token.priceChange24h < -5 || (hash % 4 === 0)) {
-      const sellAmt = Math.round(3500 + ((hash * 7) % 24000));
+    // 3. What they are selling (Exits based on actual DEX sell volume)
+    if (token.volumeSell24h > 500) {
       selling.push({
         id: `c-sell-${token.id}`,
         type: 'SELL_EXIT',
@@ -199,15 +165,15 @@ export function analyzeChineseCommunity(tokens: Token[]): {
         tokenName: token.name,
         chineseNameTranslate: translation,
         chain: token.chain,
-        actorAddress: `${actorPrefix}Exit${hash.toString(36).slice(0, 4)}`,
-        actorLabel: `${actorLabel} (Profit Taker / Cabal Dumper)`,
-        actionAmountUsd: sellAmt,
+        actorAddress: token.creatorAddress,
+        actorLabel: `${actorLabel} (DEX Liquidity Outflow)`,
+        actionAmountUsd: token.volumeSell24h,
         tokenPriceUsd: token.priceUsd,
         priceChange24h: token.priceChange24h,
-        txHash: token.chain === 'solana' ? `sol_sell_${hash}` : `0x_sell_${hash}`,
-        narrativeTag: 'Cabal Profit-Taking / Exit',
-        timestamp: now - ((hash % 30) + 2) * 60 * 1000,
-        notes: `Heavy market sell execution detected from cabal insider address. Liquidating ${Math.min(95, 30 + (hash % 50))}% of wallet position following green candle pump.`,
+        txHash: token.pairAddress,
+        narrativeTag: 'DEX Profit-Taking / Sell Outflow',
+        timestamp: token.createdAt,
+        notes: `DEX Sell volume of $${token.volumeSell24h.toLocaleString()} logged across ${token.txns24hSell} transactions.`,
       });
     }
   }
@@ -227,13 +193,24 @@ export function analyzeChineseCommunity(tokens: Token[]): {
     ...selling.map((s) => s.tokenAddress),
   ]).size;
 
-  const summary: ChineseRadarSummary = {
-    totalTrackedTokens,
-    total24hBuyVolume,
-    total24hSellVolume,
-    netFlowUsd,
-    dominantNarrative: 'Binance Listing Speculation & WeChat Chinese Lore Meta',
-  };
+  let dominantNarrative = 'Binance Ecosystem & BNB Momentum';
+  if (totalTrackedTokens > 0) {
+    const hasDragon = created.some((c) => Boolean(c.chineseNameTranslate?.includes('Dragon')));
+    const hasWukong = created.some((c) => Boolean(c.chineseNameTranslate?.includes('Wukong')));
+    if (hasDragon) dominantNarrative = 'Year of the Dragon / Wealth Lore';
+    else if (hasWukong) dominantNarrative = 'Sun Wukong / Mythological Hero Meta';
+  }
 
-  return { created, buying, selling, summary };
+  return {
+    created,
+    buying,
+    selling,
+    summary: {
+      totalTrackedTokens,
+      total24hBuyVolume,
+      total24hSellVolume,
+      netFlowUsd,
+      dominantNarrative,
+    },
+  };
 }

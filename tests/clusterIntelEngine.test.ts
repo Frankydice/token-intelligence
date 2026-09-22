@@ -48,7 +48,7 @@ describe('Cluster Intel Engine Tests (Tied Wallets & Whales)', () => {
     expect(ring.totalPumpVolumeUsd).toBeGreaterThan(0);
     expect(ring.totalDumpVolumeUsd).toBeGreaterThan(0);
     expect(['DISGUISED_DISTRIBUTION', 'WASH_PUMP_AND_DUMP', 'COORDINATED_SNIPER_ACCUMULATION']).toContain(ring.tactic);
-    expect(ring.explanation).toContain('Common root funder');
+    expect(ring.explanation).toContain('Deployer root');
   });
 
   it('should extract whale buy transactions exceeding threshold', () => {

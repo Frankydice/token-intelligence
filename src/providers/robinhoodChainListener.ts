@@ -22,9 +22,8 @@ export class RobinhoodChainListener {
   private endpoint: string = 'wss://rpc.robinhood.com/ws';
   private status: RobinhoodChainStatus = 'DISCONNECTED';
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-  private connectTimeout: ReturnType<typeof setTimeout> | null = null;
-  private fallbackInterval: ReturnType<typeof setInterval> | null = null;
   private isManualDisconnect: boolean = false;
+  private reconnectAttempts: number = 0;
   private statusListeners: ((status: RobinhoodChainStatus) => void)[] = [];
   private launchListeners: ((event: RobinhoodNewLaunchEvent) => void)[] = [];
 
@@ -65,16 +64,16 @@ export class RobinhoodChainListener {
   public connect(): void {
     this.isManualDisconnect = false;
 
-    if (this.status === 'CONNECTED' && (this.ws?.readyState === WebSocket.OPEN || this.fallbackInterval !== null)) {
+    if (this.status === 'CONNECTED' && this.ws?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    if (typeof WebSocket === 'undefined') {
+      this.setStatus('DISCONNECTED');
       return;
     }
 
     this.setStatus('CONNECTING');
-
-    if (typeof WebSocket === 'undefined') {
-      this.activateFallbackStream();
-      return;
-    }
 
     try {
       if (this.ws) {
@@ -86,16 +85,8 @@ export class RobinhoodChainListener {
 
       this.ws = new WebSocket(this.endpoint);
 
-      if (this.connectTimeout) clearTimeout(this.connectTimeout);
-      this.connectTimeout = setTimeout(() => {
-        if (this.status !== 'CONNECTED' && !this.isManualDisconnect) {
-          this.activateFallbackStream();
-        }
-      }, 3500);
-
       this.ws.onopen = () => {
-        if (this.connectTimeout) clearTimeout(this.connectTimeout);
-        this.stopFallbackStream();
+        this.reconnectAttempts = 0;
         this.setStatus('CONNECTED');
         this.subscribeToPairCreated();
       };
@@ -106,81 +97,69 @@ export class RobinhoodChainListener {
 
       this.ws.onerror = (err) => {
         console.warn('[RobinhoodChainListener] Direct WebSocket error:', err);
-        if (this.connectTimeout) clearTimeout(this.connectTimeout);
         if (!this.isManualDisconnect) {
-          this.activateFallbackStream();
-        } else {
           this.setStatus('ERROR');
+          this.scheduleReconnect();
         }
       };
 
       this.ws.onclose = () => {
-        if (this.connectTimeout) clearTimeout(this.connectTimeout);
         if (!this.isManualDisconnect) {
-          this.activateFallbackStream();
+          this.setStatus('DISCONNECTED');
+          this.scheduleReconnect();
         } else {
           this.setStatus('DISCONNECTED');
         }
       };
     } catch (err) {
       console.warn('[RobinhoodChainListener] Failed to initialize WebSocket:', err);
-      if (this.connectTimeout) clearTimeout(this.connectTimeout);
       if (!this.isManualDisconnect) {
-        this.activateFallbackStream();
-      } else {
         this.setStatus('ERROR');
+        this.scheduleReconnect();
       }
     }
   }
 
-  public activateFallbackStream(): void {
-    if (this.isManualDisconnect) return;
-    this.setStatus('CONNECTED');
+  private scheduleReconnect(): void {
+    if (this.isManualDisconnect || this.reconnectTimeout) return;
+    const delay = Math.min(30000, 2000 * Math.pow(1.5, this.reconnectAttempts));
+    this.reconnectAttempts++;
 
-    if (this.fallbackInterval) return;
-
-    // Emit live Robinhood L2 token deployment events every 28 seconds
-    this.fallbackInterval = setInterval(() => {
-      if (this.isManualDisconnect) {
-        this.stopFallbackStream();
-        return;
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
+      if (!this.isManualDisconnect) {
+        this.connect();
       }
-      this.emitSimulatedLaunch();
-    }, 28000);
-  }
-
-  public stopFallbackStream(): void {
-    if (this.fallbackInterval) {
-      clearInterval(this.fallbackInterval);
-      this.fallbackInterval = null;
-    }
+    }, delay);
   }
 
   public disconnect(): void {
     this.isManualDisconnect = true;
-    if (this.connectTimeout) {
-      clearTimeout(this.connectTimeout);
-      this.connectTimeout = null;
-    }
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
-    this.stopFallbackStream();
+
     if (this.ws) {
       this.ws.onclose = null;
       this.ws.onerror = null;
       this.ws.close();
       this.ws = null;
     }
+
     this.setStatus('DISCONNECTED');
   }
 
+  /**
+   * Subscribes to PairCreated events on Robinhood L2 DEX Factory
+   */
   private subscribeToPairCreated(): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 
-    // EVM eth_subscribe for PairCreated(address,address,address,uint) on Robinhood L2
-    const subscribeMsg = {
+    // PairCreated topic: keccak256("PairCreated(address,address,address,uint256)")
+    const PAIR_CREATED_TOPIC = '0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9';
+
+    const subMsg = {
       jsonrpc: '2.0',
       id: 1,
       method: 'eth_subscribe',
@@ -188,25 +167,33 @@ export class RobinhoodChainListener {
         'logs',
         {
           address: RobinhoodChainListener.ROBINHOOD_FACTORY_ADDRESS,
-          topics: ['0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9'], // PairCreated topic0
+          topics: [PAIR_CREATED_TOPIC],
         },
       ],
     };
 
-    this.ws.send(JSON.stringify(subscribeMsg));
+    this.ws.send(JSON.stringify(subMsg));
   }
 
+  /**
+   * Handle incoming raw JSON-RPC messages from Robinhood L2 RPC
+   */
   public handleMessage(raw: string): void {
     try {
       const data = JSON.parse(raw);
       if (!data.params || !data.params.result) return;
 
       const log = data.params.result;
-      const txHash = log.transactionHash || `0xrh_${Date.now().toString(16)}`;
-      const contractAddress = log.address || `0x${txHash.slice(2, 42)}`;
+      const txHash = log.transactionHash || '';
+      const topics = log.topics || [];
+
+      // Extract token address from topics if standard PairCreated
+      const token0 = topics[1] ? `0x${topics[1].slice(26)}` : '';
+      const token1 = topics[2] ? `0x${topics[2].slice(26)}` : '';
+      const contractAddress = token0.startsWith('0x000000000000000000000000000000000000') ? token1 : token0 || `0x${txHash.slice(2, 42)}`;
 
       const event: RobinhoodNewLaunchEvent = {
-        platform: 'robinhood_swap',
+        platform: 'orbit_factory',
         contractAddress,
         pairAddress: `0x${txHash.slice(2, 42)}`,
         signature: txHash,
@@ -221,43 +208,9 @@ export class RobinhoodChainListener {
     }
   }
 
-  public emitSimulatedLaunch(): void {
-    const assets = [
-      { name: 'Robinhood AI Agent', symbol: 'HOODAI', type: 'AI_AGENT' as const, platform: 'robinhood_swap' as const, liq: 45, mcap: 850000, price: 0.00085 },
-      { name: 'Tokenized Tesla Stock', symbol: 'rTSLA', type: 'RWA_TOKENIZED_STOCK' as const, platform: 'robinhood_rwa' as const, liq: 180, mcap: 12500000, price: 245.50 },
-      { name: 'Tokenized Nvidia RWA', symbol: 'rNVDA', type: 'RWA_TOKENIZED_STOCK' as const, platform: 'robinhood_rwa' as const, liq: 220, mcap: 18400000, price: 118.20 },
-      { name: 'Sheriff of Nottingham', symbol: 'SHERIFF', type: 'MEMECOIN' as const, platform: 'robinhood_swap' as const, liq: 28, mcap: 320000, price: 0.00032 },
-      { name: 'Robinhood Orbit Yield', symbol: 'ORBIT', type: 'DEFI_UTILITY' as const, platform: 'robinhood_swap' as const, liq: 60, mcap: 1100000, price: 0.011 },
-      { name: 'Tokenized Apple RWA', symbol: 'rAAPL', type: 'RWA_TOKENIZED_STOCK' as const, platform: 'robinhood_rwa' as const, liq: 150, mcap: 9800000, price: 228.40 },
-    ];
-
-    const pick = assets[Math.floor(Math.random() * assets.length)];
-    const randomHex = Math.random().toString(16).substring(2, 10);
-    const contractAddress = `0x1776${randomHex}928173918273918273918273${randomHex.slice(0, 4)}`;
-    const pairAddress = `0xpair${randomHex}82739182739182739182739182${randomHex.slice(0, 4)}`;
-    const signature = `0x${randomHex}${Date.now().toString(16)}abcdef1234567890`;
-
-    const event: RobinhoodNewLaunchEvent = {
-      platform: pick.platform,
-      contractAddress,
-      pairAddress,
-      signature,
-      timestamp: Date.now(),
-      initialLiquidityEth: pick.liq,
-      logSnippet: `Robinhood Chain L2 Factory: New ${pick.type} deployment ($${pick.symbol}) verified on Arbitrum Orbit.`,
-      metadata: {
-        name: pick.name,
-        symbol: pick.symbol,
-        assetType: pick.type,
-      },
-    };
-
-    this.emitLaunch(event);
-  }
-
   public createTokenFromLaunch(event: RobinhoodNewLaunchEvent): Token {
     const isRwa = event.metadata?.assetType === 'RWA_TOKENIZED_STOCK';
-    const ethPriceUsd = 3400;
+    const ethPriceUsd = 2650;
     const liquidityUsd = (event.initialLiquidityEth || 30) * ethPriceUsd;
     const defaultPrice = isRwa ? 150.0 : 0.00045;
     const defaultMcap = isRwa ? liquidityUsd * 4 : liquidityUsd * 2.5;
@@ -271,28 +224,28 @@ export class RobinhoodChainListener {
       pairAddress: event.pairAddress,
       dexId: event.platform,
       priceUsd: defaultPrice,
-      priceChange24h: 38.5,
-      priceChange1h: 4.2,
-      priceChange5m: 1.1,
-      marketCap: defaultMcap,
-      liquidity: liquidityUsd,
-      liquidityChange24h: 100,
-      volume24h: liquidityUsd * 0.45,
-      volumeBuy24h: liquidityUsd * 0.35,
-      volumeSell24h: liquidityUsd * 0.1,
-      txns24hBuy: 48,
-      txns24hSell: 12,
-      holdersCount: 35,
-      holderGrowth24hPercent: 100,
+      priceChange24h: 0,
+      priceChange1h: 0,
+      priceChange5m: 0,
+      marketCap: Math.round(defaultMcap),
+      liquidity: Math.round(liquidityUsd),
+      liquidityChange24h: 0,
+      volume24h: 15000,
+      volumeBuy24h: 15000,
+      volumeSell24h: 0,
+      txns24hBuy: 1,
+      txns24hSell: 0,
+      holdersCount: 1,
+      holderGrowth24hPercent: 0,
       createdAt: event.timestamp,
-      ageHours: 0.08,
-      creatorAddress: `0x1776deployer${event.signature.slice(2, 8)}`,
-      riskScore: isRwa ? 18 : 34,
-      opportunityScore: isRwa ? 88 : 82,
+      ageHours: 0.02,
+      creatorAddress: `0x${event.signature.slice(2, 10)}...deployer`,
+      riskScore: isRwa ? 18 : 35,
+      opportunityScore: isRwa ? 90 : 75,
       isDemo: false,
-      tags: isRwa ? ['new', 'hot', 'smart_money'] : ['new', 'hot', 'cluster_buying'],
-      circulatingSupply: isRwa ? 100_000 : 1_000_000_000,
-      totalSupply: isRwa ? 100_000 : 1_000_000_000,
+      tags: ['new', 'hot'],
+      circulatingSupply: 1_000_000_000,
+      totalSupply: 1_000_000_000,
     };
   }
 

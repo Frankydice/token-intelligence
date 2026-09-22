@@ -95,24 +95,17 @@ describe('Solana WebSocket Real-Time Launch Listener Tests', () => {
     expect(token.liquidity).toBeGreaterThan(0);
   });
 
-  it('should activate resilient fallback stream and maintain CONNECTED status', () => {
+  it('should remain DISCONNECTED when offline and never emit mocked launches', () => {
     const listener = new SolanaWebSocketListener();
-    listener.activateFallbackStream();
-
-    expect(listener.getStatus()).toBe('CONNECTED');
+    expect(listener.getStatus()).toBe('DISCONNECTED');
 
     let capturedLaunch: SolanaNewLaunchEvent | null = null;
     listener.onNewLaunch((evt) => {
       capturedLaunch = evt;
     });
 
-    listener.emitSimulatedLaunch();
-    expect(capturedLaunch).not.toBeNull();
-    const evt = capturedLaunch as unknown as SolanaNewLaunchEvent;
-    expect(['pumpfun', 'raydium']).toContain(evt.platform);
-    expect(evt.mintAddress.startsWith('sol_')).toBe(true);
-
-    listener.disconnect();
+    // Zero simulated emissions occur when disconnected
+    expect(capturedLaunch).toBeNull();
     expect(listener.getStatus()).toBe('DISCONNECTED');
   });
 

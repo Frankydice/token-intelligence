@@ -266,9 +266,13 @@ export class WalletConnectionService {
         } catch {
           throw new Error(`Connection request rejected by ${providerName}.`);
         }
+      } else if (typeof window !== 'undefined') {
+        throw new Error(
+          `${providerName} wallet extension is not installed. Please install ${providerName} or use Watch-Only mode to inspect any wallet address.`
+        );
       } else {
-        // Fallback address for environments without extension
-        address = `7xKXtg2C${Math.random().toString(36).substring(2, 6)}...${providerName}`;
+        // Node/testing runtime: deterministic address without synthetic randomizers
+        address = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
       }
     }
     // 3. EVM EXTENSIONS (MetaMask, Rabby, Coinbase, Trust)
@@ -294,9 +298,13 @@ export class WalletConnectionService {
         } catch {
           throw new Error(`Connection request rejected by ${providerName}.`);
         }
+      } else if (typeof window !== 'undefined') {
+        throw new Error(
+          `${providerName} wallet extension is not installed. Please install ${providerName} or use Watch-Only mode to inspect any wallet address.`
+        );
       } else {
-        // Fallback address for environments without extension
-        address = `0x71c0b1${Math.random().toString(16).substring(2, 8)}...${providerType.slice(0, 4)}`;
+        // Node/testing runtime: deterministic address without synthetic randomizers
+        address = '0x1813e3f70af99b6501c669531b74e03674a235b9';
       }
     }
 

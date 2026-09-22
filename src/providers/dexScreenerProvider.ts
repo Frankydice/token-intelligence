@@ -115,7 +115,7 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
         if (!mappedChain) continue;
         if (chain && mappedChain !== chain) continue;
 
-        const createdAt = pair.pairCreatedAt || (now - Math.floor(Math.random() * 24 * 3600 * 1000));
+        const createdAt = pair.pairCreatedAt || now;
         const ageMs = now - createdAt;
         if (ageMs > thirtyDaysMs) continue;
 
@@ -128,6 +128,10 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
         const buys = pair.txns?.h24?.buys || 1;
         const sells = pair.txns?.h24?.sells || 1;
         const buyRatio = buys / Math.max(1, sells);
+        const totalTx = buys + sells;
+        const buyFraction = totalTx > 0 ? (buys / totalTx) : 0.5;
+        const volumeBuy24h = Math.round(volume24h * buyFraction);
+        const volumeSell24h = Math.round(volume24h * (1 - buyFraction));
 
         // Calculate dynamic real opportunity score (0-100)
         let oppScore = 50;
@@ -180,14 +184,14 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
           priceChange5m: pair.priceChange?.m5 || 0,
           marketCap: Math.round(marketCap),
           liquidity: Math.round(liquidity),
-          liquidityChange24h: Math.round((Math.random() * 20) - 5),
+          liquidityChange24h: 0,
           volume24h: Math.round(volume24h),
-          volumeBuy24h: Math.round(volume24h * 0.54),
-          volumeSell24h: Math.round(volume24h * 0.46),
+          volumeBuy24h,
+          volumeSell24h,
           txns24hBuy: buys,
           txns24hSell: sells,
-          holdersCount: Math.max(50, Math.round(marketCap / 600)),
-          holderGrowth24hPercent: Number(((Math.random() * 8) + 1).toFixed(1)),
+          holdersCount: Math.max(1, totalTx),
+          holderGrowth24hPercent: 0,
           createdAt,
           ageHours: Number((ageMs / (3600 * 1000)).toFixed(1)),
           creatorAddress,

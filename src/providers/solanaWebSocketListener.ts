@@ -20,9 +20,8 @@ export class SolanaWebSocketListener {
   private endpoint: string = 'wss://api.mainnet-beta.solana.com';
   private status: SolanaWsStatus = 'DISCONNECTED';
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-  private connectTimeout: ReturnType<typeof setTimeout> | null = null;
-  private fallbackInterval: ReturnType<typeof setInterval> | null = null;
   private isManualDisconnect: boolean = false;
+  private reconnectAttempts: number = 0;
   private statusListeners: ((status: SolanaWsStatus) => void)[] = [];
   private launchListeners: ((event: SolanaNewLaunchEvent) => void)[] = [];
 
@@ -63,17 +62,16 @@ export class SolanaWebSocketListener {
   public connect(): void {
     this.isManualDisconnect = false;
 
-    if (this.status === 'CONNECTED' && (this.ws?.readyState === WebSocket.OPEN || this.fallbackInterval !== null)) {
+    if (this.status === 'CONNECTED' && this.ws?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    if (typeof WebSocket === 'undefined') {
+      this.setStatus('DISCONNECTED');
       return;
     }
 
     this.setStatus('CONNECTING');
-
-    // If WebSocket is unavailable in runtime, activate fallback stream
-    if (typeof WebSocket === 'undefined') {
-      this.activateFallbackStream();
-      return;
-    }
 
     try {
       if (this.ws) {
@@ -85,17 +83,8 @@ export class SolanaWebSocketListener {
 
       this.ws = new WebSocket(this.endpoint);
 
-      // Connect timeout: If public RPC fails to handshake within 3.5s, switch to resilient live stream
-      if (this.connectTimeout) clearTimeout(this.connectTimeout);
-      this.connectTimeout = setTimeout(() => {
-        if (this.status !== 'CONNECTED' && !this.isManualDisconnect) {
-          this.activateFallbackStream();
-        }
-      }, 3500);
-
       this.ws.onopen = () => {
-        if (this.connectTimeout) clearTimeout(this.connectTimeout);
-        this.stopFallbackStream();
+        this.reconnectAttempts = 0;
         this.setStatus('CONNECTED');
         this.subscribeToPrograms();
       };
@@ -106,80 +95,65 @@ export class SolanaWebSocketListener {
 
       this.ws.onerror = (err) => {
         console.warn('[SolanaWsListener] WebSocket direct connection error:', err);
-        if (this.connectTimeout) clearTimeout(this.connectTimeout);
         if (!this.isManualDisconnect) {
-          this.activateFallbackStream();
-        } else {
           this.setStatus('ERROR');
+          this.scheduleReconnect();
         }
       };
 
       this.ws.onclose = () => {
-        if (this.connectTimeout) clearTimeout(this.connectTimeout);
         if (!this.isManualDisconnect) {
-          this.activateFallbackStream();
+          this.setStatus('DISCONNECTED');
+          this.scheduleReconnect();
         } else {
           this.setStatus('DISCONNECTED');
         }
       };
     } catch (err) {
       console.warn('[SolanaWsListener] Failed to initialize WebSocket:', err);
-      if (this.connectTimeout) clearTimeout(this.connectTimeout);
       if (!this.isManualDisconnect) {
-        this.activateFallbackStream();
-      } else {
         this.setStatus('ERROR');
+        this.scheduleReconnect();
       }
     }
   }
 
-  public activateFallbackStream(): void {
-    if (this.isManualDisconnect) return;
-    this.setStatus('CONNECTED');
+  private scheduleReconnect(): void {
+    if (this.isManualDisconnect || this.reconnectTimeout) return;
+    const delay = Math.min(30000, 2000 * Math.pow(1.5, this.reconnectAttempts));
+    this.reconnectAttempts++;
 
-    if (this.fallbackInterval) return;
-
-    // Periodically emit live Solana launch telemetry
-    this.fallbackInterval = setInterval(() => {
-      if (this.isManualDisconnect) {
-        this.stopFallbackStream();
-        return;
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
+      if (!this.isManualDisconnect) {
+        this.connect();
       }
-      this.emitSimulatedLaunch();
-    }, 25000);
-  }
-
-  public stopFallbackStream(): void {
-    if (this.fallbackInterval) {
-      clearInterval(this.fallbackInterval);
-      this.fallbackInterval = null;
-    }
+    }, delay);
   }
 
   public disconnect(): void {
     this.isManualDisconnect = true;
-    if (this.connectTimeout) {
-      clearTimeout(this.connectTimeout);
-      this.connectTimeout = null;
-    }
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
-    this.stopFallbackStream();
+
     if (this.ws) {
       this.ws.onclose = null;
       this.ws.onerror = null;
       this.ws.close();
       this.ws = null;
     }
+
     this.setStatus('DISCONNECTED');
   }
 
+  /**
+   * Subscribes to logs for Pump.fun and Raydium programs
+   */
   private subscribeToPrograms(): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 
-    // Subscribe to Pump.fun Program logs
     const pumpfunSub = {
       jsonrpc: '2.0',
       id: 1,
@@ -190,7 +164,6 @@ export class SolanaWebSocketListener {
       ],
     };
 
-    // Subscribe to Raydium AMM Program logs
     const raydiumSub = {
       jsonrpc: '2.0',
       id: 2,
@@ -253,39 +226,6 @@ export class SolanaWebSocketListener {
   }
 
   /**
-   * Generates a simulated live Solana launch event
-   */
-  public emitSimulatedLaunch(): void {
-    const platforms: ('pumpfun' | 'raydium')[] = ['pumpfun', 'raydium'];
-    const platform = platforms[Math.floor(Math.random() * platforms.length)];
-    const randomHex = Math.random().toString(36).substring(2, 10);
-    const prefixes = ['SOL', 'MOON', 'PUMP', 'AI', 'CABAL', 'CYBER', 'ALPHA', 'HYPER'];
-    const suffixes = ['BOT', 'X', 'SPEED', 'QUANT', 'VIBE', 'FLOW', 'RAY', 'NODE'];
-    const randPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const randSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    const signature = `${randomHex}${Date.now().toString(36)}`;
-    const mintAddress = platform === 'pumpfun' ? `sol_pump_${randomHex}` : `sol_ray_${randomHex}`;
-
-    const event: SolanaNewLaunchEvent = {
-      platform,
-      mintAddress,
-      signature,
-      timestamp: Date.now(),
-      initialLiquiditySol: platform === 'pumpfun' ? 30.0 : 65.0,
-      logSnippet:
-        platform === 'pumpfun'
-          ? 'Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1] | Instruction: Create'
-          : 'Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1] | initialize2',
-      metadata: {
-        symbol: `${randPrefix}${randSuffix}`,
-        name: `${randPrefix} ${randSuffix}`,
-      },
-    };
-
-    this.emitLaunch(event);
-  }
-
-  /**
    * Transforms a real-time launch event into a Token model
    */
   public createTokenFromLaunch(event: SolanaNewLaunchEvent): Token {
@@ -306,14 +246,14 @@ export class SolanaWebSocketListener {
       priceChange5m: 0,
       marketCap: 15_000,
       liquidity: (event.initialLiquiditySol || 30) * 150,
-      liquidityChange24h: 100,
+      liquidityChange24h: 0,
       volume24h: 5000,
       volumeBuy24h: 5000,
       volumeSell24h: 0,
       txns24hBuy: 1,
       txns24hSell: 0,
       holdersCount: 1,
-      holderGrowth24hPercent: 100,
+      holderGrowth24hPercent: 0,
       createdAt: event.timestamp,
       ageHours: 0.05,
       creatorAddress: '5Q54...liveDeployer',
