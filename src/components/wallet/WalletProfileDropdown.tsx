@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Wallet, ChevronDown, Copy, Check, ExternalLink, LogOut, RefreshCw } from 'lucide-react';
+import { Wallet, ChevronDown, Copy, Check, ExternalLink, LogOut, RefreshCw, ArrowRightLeft } from 'lucide-react';
 import { walletConnectionService } from '../../services/walletConnectionService';
 import { ConnectedWallet } from '../../types/walletConnection';
 import { ConnectWalletModal } from './ConnectWalletModal';
@@ -182,16 +182,35 @@ export const WalletProfileDropdown: React.FC<WalletProfileDropdownProps> = ({ cl
             </div>
           </div>
 
-          {/* Disconnect Button */}
-          <button
-            onClick={handleDisconnect}
-            className="w-full py-1.5 px-2 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition flex items-center justify-center gap-1.5 font-semibold text-[11px]"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>DISCONNECT WALLET</span>
-          </button>
+          {/* Action Buttons: Switch Chain & Disconnect */}
+          <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-zinc-800/80">
+            <button
+              onClick={() => {
+                setIsDropdownOpen(false);
+                setIsModalOpen(true);
+              }}
+              className="w-full py-1.5 px-2 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 transition flex items-center justify-center gap-1.5 font-semibold text-[11px]"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5 text-sky-500" />
+              <span>SWITCH WALLET / CHAIN</span>
+            </button>
+
+            <button
+              onClick={handleDisconnect}
+              className="w-full py-1.5 px-2 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition flex items-center justify-center gap-1.5 font-semibold text-[11px]"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>DISCONNECT WALLET</span>
+            </button>
+          </div>
         </div>
       )}
+
+      {/* Switch Wallet Modal */}
+      <ConnectWalletModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };
