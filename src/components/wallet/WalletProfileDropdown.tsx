@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Wallet, ChevronDown, Copy, Check, ExternalLink, LogOut } from 'lucide-react';
+import { Wallet, ChevronDown, Copy, Check, ExternalLink, LogOut, RefreshCw } from 'lucide-react';
 import { walletConnectionService } from '../../services/walletConnectionService';
 import { ConnectedWallet } from '../../types/walletConnection';
 import { ConnectWalletModal } from './ConnectWalletModal';
@@ -13,6 +13,7 @@ export const WalletProfileDropdown: React.FC<WalletProfileDropdownProps> = ({ cl
   const [wallet, setWallet] = useState<ConnectedWallet | null>(walletConnectionService.getWallet());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -22,6 +23,13 @@ export const WalletProfileDropdown: React.FC<WalletProfileDropdownProps> = ({ cl
     });
     return unsub;
   }, []);
+
+  // Fetch live balance whenever dropdown opens
+  useEffect(() => {
+    if (isDropdownOpen && wallet) {
+      walletConnectionService.refreshBalance().catch(() => {});
+    }
+  }, [isDropdownOpen]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -39,6 +47,17 @@ export const WalletProfileDropdown: React.FC<WalletProfileDropdownProps> = ({ cl
     navigator.clipboard.writeText(wallet.address);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const handleRefreshBalance = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (isRefreshing || !wallet) return;
+    setIsRefreshing(true);
+    try {
+      await walletConnectionService.refreshBalance();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleDisconnect = () => {
@@ -139,12 +158,22 @@ export const WalletProfileDropdown: React.FC<WalletProfileDropdownProps> = ({ cl
             </div>
           </div>
 
-          {/* Balance Estimation */}
+          {/* Live On-Chain Balance */}
           <div className="flex items-center justify-between px-1">
-            <span className="text-slate-400 dark:text-zinc-500">Native Balance:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 dark:text-zinc-500">Native Balance:</span>
+              <button
+                onClick={handleRefreshBalance}
+                disabled={isRefreshing}
+                className="text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 transition"
+                title="Query live on-chain balance"
+              >
+                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-sky-500' : ''}`} />
+              </button>
+            </div>
             <div className="text-right">
               <span className="font-semibold text-slate-900 dark:text-zinc-100">
-                {wallet.balanceNative}{' '}
+                {wallet.balanceNative.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}{' '}
                 {wallet.chain === 'solana' ? 'SOL' : wallet.chain === 'bsc' ? 'BNB' : 'ETH'}
               </span>
               <span className="text-[10px] text-slate-400 dark:text-zinc-500 block">

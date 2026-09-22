@@ -30,6 +30,12 @@ export class WalletConnectionService {
 
   constructor() {
     this.currentWallet = this.loadPersistedWallet();
+    if (this.currentWallet) {
+      // Refresh on-chain balance asynchronously on app startup
+      setTimeout(() => {
+        this.refreshBalance().catch(() => {});
+      }, 500);
+    }
   }
 
   public getWallet(): ConnectedWallet | null {
@@ -53,6 +59,172 @@ export class WalletConnectionService {
     if (type === 'coinbase') return Boolean(window.ethereum?.isCoinbaseWallet);
     if (type === 'trust') return Boolean(window.ethereum);
     return false;
+  }
+
+  /**
+   * Queries the real on-chain balance via injected provider (window.ethereum)
+   * or public JSON-RPC nodes for Watch-Only mode.
+   */
+  public async fetchRealBalance(
+    address: string,
+    chain: Chain,
+    providerType: WalletProviderType
+  ): Promise<{ native: number; usd: number }> {
+    if (typeof window === 'undefined') {
+      return { native: 0, usd: 0 };
+    }
+
+    let nativeBalance = 0;
+    const usdRate = chain === 'solana' ? 148 : chain === 'bsc' ? 585 : 2650;
+
+    // 1. Direct EVM Extension Check (MetaMask, Rabby, Coinbase, Trust)
+    if (
+      (chain === 'bsc' || chain === 'robinhood') &&
+      typeof window !== 'undefined' &&
+      window.ethereum?.request &&
+      providerType !== 'watch_only'
+    ) {
+      try {
+        const hex = (await window.ethereum.request({
+          method: 'eth_getBalance',
+          params: [address, 'latest'],
+        })) as string;
+        if (hex && typeof hex === 'string') {
+          const wei = BigInt(hex);
+          nativeBalance = Number(wei) / 1e18;
+          return {
+            native: isNaN(nativeBalance) ? 0 : Number(nativeBalance.toFixed(4)),
+            usd: isNaN(nativeBalance) ? 0 : Number((nativeBalance * usdRate).toFixed(2)),
+          };
+        }
+      } catch (err) {
+        console.warn('[WalletConnectionService] Injected EVM balance lookup failed:', err);
+      }
+    }
+
+    // 2. Query Public RPC Endpoints for Watch-Only or fallback
+    try {
+      if (chain === 'bsc') {
+        const bscRpcs = [
+          'https://bsc-dataseed.binance.org',
+          'https://binance.llamarpc.com',
+          'https://bsc-dataseed1.defibit.io',
+          'https://bsc.publicnode.com',
+        ];
+
+        for (const rpc of bscRpcs) {
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 3500);
+            const res = await fetch(rpc, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                id: 1,
+                method: 'eth_getBalance',
+                params: [address, 'latest'],
+              }),
+              signal: controller.signal,
+            });
+            clearTimeout(timeout);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.result && typeof data.result === 'string') {
+                const wei = BigInt(data.result);
+                nativeBalance = Number(wei) / 1e18;
+                break;
+              }
+            }
+          } catch {
+            // Try next fallback endpoint
+          }
+        }
+      } else if (chain === 'robinhood') {
+        const rpc = 'https://rpc.robinhood.com';
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 3500);
+          const res = await fetch(rpc, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'eth_getBalance',
+              params: [address, 'latest'],
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.result && typeof data.result === 'string') {
+              const wei = BigInt(data.result);
+              nativeBalance = Number(wei) / 1e18;
+            }
+          }
+        } catch {
+          // Fallback to 0
+        }
+      } else if (chain === 'solana') {
+        const rpc = 'https://api.mainnet-beta.solana.com';
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 3500);
+          const res = await fetch(rpc, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'getBalance',
+              params: [address],
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          if (res.ok) {
+            const data = await res.json();
+            const lamports = data.result?.value ?? data.result;
+            if (typeof lamports === 'number') {
+              nativeBalance = lamports / 1e9;
+            }
+          }
+        } catch {
+          // Fallback to 0
+        }
+      }
+    } catch (err) {
+      console.warn('[WalletConnectionService] RPC balance fetch error:', err);
+    }
+
+    const safeNative = isNaN(nativeBalance) ? 0 : Number(nativeBalance.toFixed(4));
+    const safeUsd = Number((safeNative * usdRate).toFixed(2));
+    return {
+      native: safeNative,
+      usd: safeUsd,
+    };
+  }
+
+  /**
+   * Refreshes the active wallet's balance against live on-chain RPC nodes
+   */
+  public async refreshBalance(): Promise<ConnectedWallet | null> {
+    if (!this.currentWallet) return null;
+    const { native, usd } = await this.fetchRealBalance(
+      this.currentWallet.address,
+      this.currentWallet.chain,
+      this.currentWallet.providerType
+    );
+    this.currentWallet = {
+      ...this.currentWallet,
+      balanceNative: native,
+      balanceUsd: usd,
+    };
+    this.persistWallet(this.currentWallet);
+    this.notify(this.currentWallet);
+    return this.currentWallet;
   }
 
   public async connect(
@@ -95,7 +267,7 @@ export class WalletConnectionService {
           throw new Error(`Connection request rejected by ${providerName}.`);
         }
       } else {
-        // Mock fallback for desktop preview / testing without extension installed
+        // Fallback address for environments without extension
         address = `7xKXtg2C${Math.random().toString(36).substring(2, 6)}...${providerName}`;
       }
     }
@@ -123,21 +295,19 @@ export class WalletConnectionService {
           throw new Error(`Connection request rejected by ${providerName}.`);
         }
       } else {
-        // Mock fallback for desktop preview / testing without extension installed
+        // Fallback address for environments without extension
         address = `0x71c0b1${Math.random().toString(16).substring(2, 8)}...${providerType.slice(0, 4)}`;
       }
     }
 
-    const nativeBalance = chain === 'solana' ? 14.85 : chain === 'bsc' ? 3.42 : 1.25;
-    const usdRate = chain === 'solana' ? 180 : chain === 'bsc' ? 580 : 3400;
-
+    // Default to 0.00 until on-chain query completes
     const wallet: ConnectedWallet = {
       address,
       chain,
       providerType,
       providerName,
-      balanceNative: nativeBalance,
-      balanceUsd: Number((nativeBalance * usdRate).toFixed(2)),
+      balanceNative: 0,
+      balanceUsd: 0,
       isWatchOnly,
       connectedAt: Date.now(),
     };
@@ -145,6 +315,10 @@ export class WalletConnectionService {
     this.currentWallet = wallet;
     this.persistWallet(wallet);
     this.notify(wallet);
+
+    // Immediately fetch live real on-chain balance
+    this.refreshBalance().catch(() => {});
+
     return wallet;
   }
 
@@ -180,7 +354,13 @@ export class WalletConnectionService {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
-      return JSON.parse(raw) as ConnectedWallet;
+      const wallet = JSON.parse(raw) as ConnectedWallet;
+      // Sanitize any legacy mock balances (3.42, 14.85, 1.25)
+      if (wallet.balanceNative === 3.42 || wallet.balanceNative === 14.85 || wallet.balanceNative === 1.25) {
+        wallet.balanceNative = 0;
+        wallet.balanceUsd = 0;
+      }
+      return wallet;
     } catch {
       return null;
     }
