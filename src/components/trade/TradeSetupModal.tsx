@@ -55,55 +55,56 @@ export const TradeSetupModal: React.FC<{ token: Token }> = ({ token }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="terminal-card bg-[#12141c] border border-zinc-700/80 w-full max-w-xl shadow-2xl rounded-xl">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-[var(--card-bg)] text-[var(--text-primary)] border border-[var(--card-border)] w-full max-w-xl shadow-2xl rounded-t-2xl sm:rounded-xl max-h-[92vh] sm:max-h-[90vh] flex flex-col transition-colors duration-200">
         {/* Header */}
-        <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/70 rounded-t-xl">
+        <div className="p-4 border-b border-[var(--card-border)] flex items-center justify-between bg-black/5 dark:bg-black/40 rounded-t-2xl sm:rounded-t-xl shrink-0">
           <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-sky-400" />
+            <ShieldCheck className="w-5 h-5 text-sky-500 dark:text-sky-400 shrink-0" />
             <div>
-              <div className="font-mono font-semibold text-zinc-100 text-sm">
+              <div className="font-mono font-semibold text-sm">
                 HUMAN TRADE SETUP AUTHORIZATION
               </div>
-              <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+              <div className="text-[11px] text-[var(--text-muted)] font-mono mt-0.5">
                 Define exact execution criteria. Bot will wait for entry and monitor exits.
               </div>
             </div>
           </div>
           <button
             onClick={closeTradeSetup}
-            className="p-1 rounded-md text-zinc-400 hover:text-zinc-200 transition"
+            className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 transition"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form Body */}
-        <div className="p-6 space-y-4 font-mono text-xs text-zinc-200">
+        {/* Form Body (Scrollable) */}
+        <div className="p-4 sm:p-6 space-y-4 font-mono text-xs overflow-y-auto flex-1">
           {/* Token Header Banner */}
-          <div className="bg-zinc-900/60 p-3 rounded-lg border border-zinc-800 flex items-center justify-between">
+          <div className="bg-black/5 dark:bg-zinc-900/60 p-3 rounded-lg border border-[var(--card-border)] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-zinc-100">${token.symbol}</span>
-              <span className="text-zinc-400">({token.name})</span>
+              <span className="font-semibold text-sm">${token.symbol}</span>
+              <span className="text-[var(--text-muted)] hidden sm:inline">({token.name})</span>
               <ChainBadge chain={token.chain} />
             </div>
             <div className="text-right">
-              <span className="text-zinc-400 text-[10px] block uppercase tracking-wider">Current Market Price</span>
-              <span className="font-semibold text-zinc-100">{formatUsd(token.priceUsd, 6)}</span>
+              <span className="text-[var(--text-muted)] text-[10px] block uppercase tracking-wider">Current Market Price</span>
+              <span className="font-semibold text-sm">{formatUsd(token.priceUsd, 6)}</span>
             </div>
           </div>
 
           {errorMsg && (
-            <div className="p-2.5 rounded-md bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
+            <div className="p-2.5 rounded-md bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-mono">
               {errorMsg}
             </div>
           )}
 
           {/* Form Fields Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Entry Trigger Price */}
             <div>
-              <label className="text-zinc-300 block mb-1 font-medium">
+              <label className="text-[var(--text-primary)] block mb-1 font-medium">
                 Entry Trigger Price ($)
               </label>
               <input
@@ -111,35 +112,35 @@ export const TradeSetupModal: React.FC<{ token: Token }> = ({ token }) => {
                 step="any"
                 value={entryTriggerPrice}
                 onChange={(e) => setEntryTriggerPrice(parseFloat(e.target.value) || 0)}
-                className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
               />
-              <span className="text-[10px] text-zinc-500 mt-1 block">
-                Bot will wait until price reaches this target before executing.
+              <span className="text-[10px] text-[var(--text-muted)] mt-1 block">
+                Bot triggers only at or below this target price.
               </span>
             </div>
 
             {/* Position Size */}
             <div>
-              <label className="text-zinc-300 block mb-1 font-medium">
+              <label className="text-[var(--text-primary)] block mb-1 font-medium">
                 Position Size (USD)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-zinc-500">$</span>
+                <span className="absolute left-3 top-2.5 text-[var(--text-muted)]">$</span>
                 <input
                   type="number"
                   value={positionSizeUsd}
                   onChange={(e) => setPositionSizeUsd(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 pl-7 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                  className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 pl-7 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
                 />
               </div>
-              <span className="text-[10px] text-zinc-500 mt-1 block">
-                Hard safety limit: $5,000 max.
+              <span className="text-[10px] text-[var(--text-muted)] mt-1 block">
+                Safety cap: $5,000 max.
               </span>
             </div>
 
             {/* Take Profit */}
             <div>
-              <label className="text-zinc-300 block mb-1 font-medium">
+              <label className="text-[var(--text-primary)] block mb-1 font-medium">
                 Take Profit (+{takeProfitPercent}%)
               </label>
               <div className="flex items-center gap-2">
@@ -147,15 +148,15 @@ export const TradeSetupModal: React.FC<{ token: Token }> = ({ token }) => {
                   type="number"
                   value={takeProfitPercent}
                   onChange={(e) => setTakeProfitPercent(parseFloat(e.target.value) || 0)}
-                  className="w-24 bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                  className="w-24 bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
                 />
-                <span className="text-zinc-300 font-semibold">= {formatUsd(takeProfitPrice, 6)}</span>
+                <span className="text-[var(--text-muted)] font-semibold">= {formatUsd(takeProfitPrice, 6)}</span>
               </div>
             </div>
 
             {/* Stop Loss */}
             <div>
-              <label className="text-zinc-300 block mb-1 font-medium">
+              <label className="text-[var(--text-primary)] block mb-1 font-medium">
                 Stop Loss (-{stopLossPercent}%)
               </label>
               <div className="flex items-center gap-2">
@@ -163,15 +164,15 @@ export const TradeSetupModal: React.FC<{ token: Token }> = ({ token }) => {
                   type="number"
                   value={stopLossPercent}
                   onChange={(e) => setStopLossPercent(parseFloat(e.target.value) || 0)}
-                  className="w-24 bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                  className="w-24 bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
                 />
-                <span className="text-zinc-300 font-semibold">= {formatUsd(stopLossPrice, 6)}</span>
+                <span className="text-[var(--text-muted)] font-semibold">= {formatUsd(stopLossPrice, 6)}</span>
               </div>
             </div>
 
             {/* Max Slippage */}
             <div>
-              <label className="text-zinc-300 block mb-1 font-medium">
+              <label className="text-[var(--text-primary)] block mb-1 font-medium">
                 Max Slippage (%)
               </label>
               <input
@@ -179,19 +180,19 @@ export const TradeSetupModal: React.FC<{ token: Token }> = ({ token }) => {
                 step="0.1"
                 value={maxSlippagePercent}
                 onChange={(e) => setMaxSlippagePercent(parseFloat(e.target.value) || 0)}
-                className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
               />
             </div>
 
             {/* Order Expiry */}
             <div>
-              <label className="text-zinc-300 block mb-1 font-medium">
+              <label className="text-[var(--text-primary)] block mb-1 font-medium">
                 Order Expiry (Hours)
               </label>
               <select
                 value={expiryHours}
                 onChange={(e) => setExpiryHours(parseInt(e.target.value))}
-                className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500 cursor-pointer"
+                className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 cursor-pointer transition"
               >
                 <option value="6">6 Hours</option>
                 <option value="12">12 Hours</option>
@@ -204,38 +205,38 @@ export const TradeSetupModal: React.FC<{ token: Token }> = ({ token }) => {
 
           {/* Order Type Toggle */}
           <div>
-            <label className="text-zinc-300 block mb-1 font-medium">Order Type</label>
+            <label className="text-[var(--text-primary)] block mb-1 font-medium">Order Execution Type</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setOrderType('TRIGGER_LIMIT')}
                 className={`p-2.5 rounded-md border text-left transition ${
                   orderType === 'TRIGGER_LIMIT'
-                    ? 'bg-zinc-800 border-zinc-600 text-zinc-100 font-semibold shadow-sm'
-                    : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
+                    ? 'bg-sky-500/15 border-sky-500/40 text-sky-600 dark:text-sky-300 font-semibold'
+                    : 'bg-black/5 dark:bg-zinc-950/60 border-[var(--card-border)] text-[var(--text-muted)] hover:bg-black/10 dark:hover:bg-zinc-900'
                 }`}
               >
-                <div>TRIGGER LIMIT</div>
-                <div className="text-[10px] text-zinc-400 font-normal mt-0.5">Execute only at or better than trigger price</div>
+                <div className="font-semibold">TRIGGER LIMIT</div>
+                <div className="text-[10px] text-[var(--text-muted)] font-normal mt-0.5">Execute only at or better than trigger</div>
               </button>
               <button
                 type="button"
                 onClick={() => setOrderType('TRIGGER_MARKET')}
                 className={`p-2.5 rounded-md border text-left transition ${
                   orderType === 'TRIGGER_MARKET'
-                    ? 'bg-zinc-800 border-zinc-600 text-zinc-100 font-semibold shadow-sm'
-                    : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
+                    ? 'bg-sky-500/15 border-sky-500/40 text-sky-600 dark:text-sky-300 font-semibold'
+                    : 'bg-black/5 dark:bg-zinc-950/60 border-[var(--card-border)] text-[var(--text-muted)] hover:bg-black/10 dark:hover:bg-zinc-900'
                 }`}
               >
-                <div>TRIGGER MARKET</div>
-                <div className="text-[10px] text-zinc-400 font-normal mt-0.5">Market order upon trigger condition</div>
+                <div className="font-semibold">TRIGGER MARKET</div>
+                <div className="text-[10px] text-[var(--text-muted)] font-normal mt-0.5">Market order upon trigger condition</div>
               </button>
             </div>
           </div>
 
           {/* Explicit Human Confirmation Checkbox */}
-          <div className="bg-zinc-950/80 p-3.5 rounded-lg border border-zinc-700/80">
-            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+          <div className="bg-black/5 dark:bg-zinc-950/80 p-3.5 rounded-lg border border-[var(--card-border)]">
+            <label className="flex items-start gap-3 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={humanConfirmed}
@@ -243,9 +244,9 @@ export const TradeSetupModal: React.FC<{ token: Token }> = ({ token }) => {
                   setHumanConfirmed(e.target.checked);
                   setErrorMsg(null);
                 }}
-                className="mt-0.5 w-4 h-4 rounded text-sky-500 focus:ring-0 focus:ring-offset-0 bg-zinc-900 border-zinc-700"
+                className="mt-0.5 w-4 h-4 rounded text-sky-500 focus:ring-0 focus:ring-offset-0 bg-white dark:bg-zinc-900 border-[var(--card-border)] cursor-pointer"
               />
-              <span className="text-[11px] text-zinc-300 leading-relaxed">
+              <span className="text-[11px] text-[var(--text-primary)] leading-relaxed">
                 I explicitly authorize this trade setup. I understand the bot will strictly monitor until the approved entry condition is satisfied, and cannot alter my parameters autonomously.
               </span>
             </label>
@@ -253,19 +254,19 @@ export const TradeSetupModal: React.FC<{ token: Token }> = ({ token }) => {
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-4 border-t border-zinc-800 bg-zinc-950/70 rounded-b-xl flex items-center justify-end gap-3 font-mono text-xs">
+        <div className="p-4 border-t border-[var(--card-border)] bg-black/5 dark:bg-black/40 rounded-b-xl flex items-center justify-end gap-3 font-mono text-xs shrink-0">
           <button
             onClick={closeTradeSetup}
-            className="px-4 py-2 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60 transition font-medium"
+            className="flex-1 sm:flex-none px-4 py-2.5 rounded-md bg-transparent hover:bg-black/10 dark:hover:bg-zinc-800 text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--card-border)] transition font-medium text-center"
           >
             CANCEL
           </button>
           <button
             onClick={handleConfirm}
-            className="px-5 py-2 rounded-md bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold transition flex items-center gap-1.5 shadow-sm"
+            className="flex-1 sm:flex-none px-5 py-2.5 rounded-md bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold transition flex items-center justify-center gap-1.5 shadow-sm"
           >
             <CheckCircle2 className="w-4 h-4" />
-            CONFIRM TRADE (ARM BOT)
+            <span>CONFIRM TRADE</span>
           </button>
         </div>
       </div>

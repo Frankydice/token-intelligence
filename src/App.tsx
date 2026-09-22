@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from './components/layout/Header';
 import { Navigation } from './components/layout/Navigation';
+import { MobileNavigation } from './components/layout/MobileNavigation';
+import { MobileDrawer } from './components/layout/MobileDrawer';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { TokenDetailPage } from './pages/TokenDetailPage';
 import { DevelopersPage } from './pages/DevelopersPage';
@@ -26,6 +28,7 @@ export const App: React.FC = () => {
   } = useTradingStore();
 
   const [toasts, setToasts] = useState<TerminalAlert[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
   useEffect(() => {
     return alertEngine.subscribe((newAlerts) => {
@@ -40,7 +43,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#090a0f] text-zinc-100">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors duration-200">
       {/* Kill Switch Banner if Active */}
       {isKillSwitchActive && (
         <div className="bg-rose-600 text-white px-4 py-2 font-mono text-xs font-bold flex items-center justify-between animate-pulse">
@@ -60,11 +63,11 @@ export const App: React.FC = () => {
       {/* Main Header */}
       <Header />
 
-      {/* Main Navigation */}
+      {/* Main Navigation (Desktop only) */}
       <Navigation />
 
-      {/* Viewport Content */}
-      <main className="flex-1 flex flex-col overflow-hidden relative">
+      {/* Viewport Content with mobile bottom navigation bar spacing */}
+      <main className="flex-1 flex flex-col overflow-hidden relative pb-16 md:pb-0">
         {activeNav === 'DISCOVER' && <DiscoverPage />}
         {activeNav === 'TOKEN_DETAIL' && <TokenDetailPage />}
         {activeNav === 'DEVELOPERS' && <DevelopersPage />}
@@ -76,14 +79,20 @@ export const App: React.FC = () => {
         {activeNav === 'SETTINGS' && <SettingsPage />}
       </main>
 
+      {/* Mobile Native Navigation Bar (< 768px) */}
+      <MobileNavigation onOpenDrawer={() => setIsDrawerOpen(true)} />
+
+      {/* Mobile Slide-Up Drawer */}
+      <MobileDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+
       {/* Opportunity Report Modal (REPORT FIRST WORKFLOW) */}
       {reportModalToken && <OpportunityReportModal token={reportModalToken} />}
 
       {/* Human Trade Setup Modal */}
       {tradeModalToken && <TradeSetupModal token={tradeModalToken} />}
 
-      {/* Alert Toasts in Lower Right */}
-      <div className="fixed bottom-4 right-4 z-50 space-y-2 max-w-sm pointer-events-none">
+      {/* Alert Toasts in Lower Right (adjusted above mobile bar on mobile screens) */}
+      <div className="fixed bottom-20 md:bottom-4 right-4 z-50 space-y-2 max-w-sm pointer-events-none">
         {toasts.map((toast) => (
           <div
             key={toast.id}

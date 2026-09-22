@@ -137,35 +137,36 @@ export const TokenDetailPage: React.FC = () => {
   ];
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#090a0f]">
+    <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors duration-200">
       {/* Token Header Banner */}
-      <div className="bg-[#0c0e14] border-b border-zinc-800 p-4">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[var(--card-bg)] border-b border-[var(--card-border)] p-3 sm:p-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-lg bg-zinc-800 border border-zinc-700/60 flex items-center justify-center font-mono font-semibold text-zinc-200 text-sm">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-black/5 dark:bg-zinc-800 border border-[var(--card-border)] flex items-center justify-center font-mono font-semibold text-[var(--text-primary)] text-sm shrink-0">
               {token.symbol.slice(0, 3)}
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-semibold text-lg text-zinc-100 font-mono">{token.name}</h1>
-                <span className="text-sm text-zinc-400 font-mono">${token.symbol}</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="font-semibold text-base sm:text-lg text-[var(--text-primary)] font-mono">{token.name}</h1>
+                <span className="text-xs sm:text-sm text-[var(--text-muted)] font-mono">${token.symbol}</span>
                 <ChainBadge chain={token.chain} />
                 {token.isDemo && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-medium">
                     DEMO
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-3 text-xs text-zinc-400 font-mono mt-1">
-                <span>CA: {truncateAddress(token.address, 6)}</span>
-                <button onClick={handleCopy} className="hover:text-sky-400 text-zinc-500 transition">
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-[var(--text-muted)] font-mono mt-1 flex-wrap">
+                <span>CA: {truncateAddress(token.address, 4)}</span>
+                <button onClick={handleCopy} className="hover:text-sky-500 text-[var(--text-muted)] transition p-0.5" title="Copy Address">
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
                 <a
                   href={getExplorerUrl(token.address, token.chain, 'token')}
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-sky-400 text-zinc-500 transition"
+                  className="hover:text-sky-500 text-[var(--text-muted)] transition p-0.5"
+                  title="View in Explorer"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -178,11 +179,11 @@ export const TokenDetailPage: React.FC = () => {
           </div>
 
           {/* Price & Badges */}
-          <div className="flex items-center gap-6 font-mono">
+          <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 font-mono border-t sm:border-t-0 border-[var(--card-border)] pt-2.5 sm:pt-0">
             <div>
-              <div className="text-[10px] text-zinc-400 uppercase tracking-wider font-medium">Current Price</div>
-              <div className="text-xl font-semibold text-zinc-100">{formatUsd(token.priceUsd, 6)}</div>
-              <div className={`text-xs ${token.priceChange24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-medium">Current Price</div>
+              <div className="text-base sm:text-xl font-semibold text-[var(--text-primary)]">{formatUsd(token.priceUsd, 6)}</div>
+              <div className={`text-[11px] sm:text-xs font-semibold ${token.priceChange24h >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                 {formatPercent(token.priceChange24h)} 24h
               </div>
             </div>
@@ -194,24 +195,24 @@ export const TokenDetailPage: React.FC = () => {
 
             <button
               onClick={() => openOpportunityReport(token)}
-              className="px-4 py-2 rounded-md bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs font-mono transition shadow-sm"
+              className="px-3.5 py-2 rounded-md bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs font-mono transition shadow-sm"
             >
-              Open Report
+              Report
             </button>
           </div>
         </div>
       </div>
 
-      {/* Tabs Bar */}
-      <div className="bg-[#090a0f] border-b border-zinc-800 px-4 flex items-center gap-1 overflow-x-auto no-scrollbar">
+      {/* Tabs Bar (Scrollable on mobile) */}
+      <div className="bg-[var(--card-bg)] border-b border-[var(--card-border)] px-3 sm:px-4 flex items-center gap-1 overflow-x-auto no-scrollbar shrink-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 text-xs font-mono font-medium transition border-b-2 whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2.5 text-xs font-mono font-medium transition border-b-2 whitespace-nowrap ${
               activeTab === tab.id
-                ? 'border-sky-400 text-sky-400 bg-sky-500/5'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                ? 'border-sky-500 text-sky-600 dark:text-sky-400 bg-sky-500/5'
+                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
             {tab.label}
@@ -220,7 +221,7 @@ export const TokenDetailPage: React.FC = () => {
       </div>
 
       {/* Tab Contents */}
-      <div className="flex-1 overflow-y-auto p-4 max-w-7xl mx-auto w-full font-mono text-xs text-zinc-300 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 max-w-7xl mx-auto w-full font-mono text-xs text-[var(--text-primary)] space-y-4">
         {/* TAB: OVERVIEW */}
         {activeTab === 'OVERVIEW' && (
           <div className="space-y-4">
@@ -276,42 +277,42 @@ export const TokenDetailPage: React.FC = () => {
 
         {/* TAB: CHART */}
         {activeTab === 'CHART' && (
-          <div className="terminal-card p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="font-bold text-slate-100 text-sm flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-cyan-400" />
+          <div className="terminal-card p-4 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--card-border)] pb-3">
+              <div className="font-semibold text-[var(--text-primary)] text-sm flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-sky-500" />
                 PRICE CHART &amp; TICK MONITOR (${token.symbol} / USD)
               </div>
-              <span className="text-xs text-slate-400 font-mono">DEX: {token.dexId.toUpperCase()}</span>
+              <span className="text-xs text-[var(--text-muted)] font-mono">DEX: {token.dexId.toUpperCase()}</span>
             </div>
             
             {/* SVG Synthetic Candlestick / Line View */}
-            <div className="w-full h-64 bg-slate-950 rounded-lg p-4 flex flex-col justify-between relative overflow-hidden border border-slate-800">
-              <div className="flex justify-between text-slate-500 text-[10px]">
+            <div className="w-full h-64 bg-black/5 dark:bg-black/50 rounded-lg p-4 flex flex-col justify-between relative overflow-hidden border border-[var(--card-border)]">
+              <div className="flex justify-between text-[var(--text-muted)] text-[10px]">
                 <span>HIGH: {formatUsd(token.priceUsd * 1.15, 6)}</span>
                 <span>VOLUME: {formatUsd(token.volume24h)}</span>
               </div>
               <svg className="w-full h-40 overflow-visible">
                 <defs>
                   <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#00f2fe" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#00f2fe" stopOpacity="0.0" />
+                    <stop offset="0%" stopColor="#0284c7" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#0284c7" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
                 <path
                   d="M 10 120 Q 80 130 160 90 T 320 70 T 480 50 T 640 40 T 800 20"
                   fill="none"
-                  stroke="#00f2fe"
+                  stroke="#0284c7"
                   strokeWidth="2.5"
                 />
-                <circle cx="800" cy="20" r="4" fill="#00f2fe" className="animate-ping" />
+                <circle cx="800" cy="20" r="4" fill="#0284c7" className="animate-ping" />
               </svg>
-              <div className="flex justify-between text-slate-500 text-[10px]">
+              <div className="flex justify-between text-[var(--text-muted)] text-[10px]">
                 <span>LOW: {formatUsd(token.priceUsd * 0.85, 6)}</span>
                 <span>CURRENT: {formatUsd(token.priceUsd, 6)}</span>
               </div>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[var(--text-muted)]">
               Real-time tick engine tracks price updates to automatically evaluate user-approved entry and exit triggers.
             </p>
           </div>
@@ -319,11 +320,11 @@ export const TokenDetailPage: React.FC = () => {
 
         {/* TAB: DEVELOPER */}
         {activeTab === 'DEVELOPER' && (
-          <div className="terminal-card p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="terminal-card p-4 sm:p-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--card-border)] pb-3">
               <div>
-                <h3 className="font-bold text-sm text-slate-100">DEPLOYER PROFILE &amp; LAUNCH TIMELINE</h3>
-                <span className="text-slate-400">{token.creatorAddress}</span>
+                <h3 className="font-semibold text-sm text-[var(--text-primary)]">DEPLOYER PROFILE &amp; LAUNCH TIMELINE</h3>
+                <span className="text-[var(--text-muted)] text-[11px] block mt-0.5">{token.creatorAddress}</span>
               </div>
               <RiskBadge level={devProfile?.riskLevel || 'WATCH'} size="md" />
             </div>
@@ -331,44 +332,44 @@ export const TokenDetailPage: React.FC = () => {
             {devProfile ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                    <span className="text-slate-400 text-[10px]">TOTAL LAUNCHES</span>
-                    <div className="text-base font-bold text-white">{devProfile.totalLaunches}</div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                    <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">TOTAL LAUNCHES</span>
+                    <div className="text-base font-semibold text-[var(--text-primary)] mt-0.5">{devProfile.totalLaunches}</div>
                   </div>
-                  <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                    <span className="text-slate-400 text-[10px]">SUCCESSFUL</span>
-                    <div className="text-base font-bold text-emerald-400">{devProfile.successfulLaunches}</div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                    <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">SUCCESSFUL</span>
+                    <div className="text-base font-semibold text-emerald-500 dark:text-emerald-400 mt-0.5">{devProfile.successfulLaunches}</div>
                   </div>
-                  <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                    <span className="text-slate-400 text-[10px]">ABANDONED</span>
-                    <div className="text-base font-bold text-amber-400">{devProfile.abandonedLaunches}</div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                    <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">ABANDONED</span>
+                    <div className="text-base font-semibold text-amber-500 dark:text-amber-400 mt-0.5">{devProfile.abandonedLaunches}</div>
                   </div>
-                  <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                    <span className="text-slate-400 text-[10px]">LP REMOVALS</span>
-                    <div className="text-base font-bold text-rose-400">{devProfile.liquidityRemovalEvents}</div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                    <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">LP REMOVALS</span>
+                    <div className="text-base font-semibold text-rose-500 dark:text-rose-400 mt-0.5">{devProfile.liquidityRemovalEvents}</div>
                   </div>
                 </div>
 
                 {/* Launch Timeline */}
                 <div>
-                  <h4 className="font-bold text-slate-200 mb-2">Previous Launches Timeline:</h4>
+                  <h4 className="font-semibold text-[var(--text-primary)] mb-2">Previous Launches Timeline:</h4>
                   <div className="space-y-2">
                     {devProfile.launchTimeline.map((launch, idx) => (
-                      <div key={idx} className="bg-slate-950 p-3 rounded border border-slate-800 flex items-center justify-between">
+                      <div key={idx} className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)] flex items-center justify-between">
                         <div>
-                          <div className="font-bold text-white flex items-center gap-2">
+                          <div className="font-semibold text-[var(--text-primary)] flex items-center gap-2">
                             <span>${launch.tokenSymbol}</span>
-                            <span className="text-slate-400">({launch.tokenName})</span>
-                            <span className={`px-1.5 py-0.2 rounded text-[10px] ${launch.status === 'successful' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                            <span className="text-[var(--text-muted)]">({launch.tokenName})</span>
+                            <span className={`px-1.5 py-0.2 rounded text-[10px] ${launch.status === 'successful' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
                               {launch.status.toUpperCase()}
                             </span>
                           </div>
-                          <div className="text-slate-500 text-[11px] mt-0.5">
+                          <div className="text-[var(--text-muted)] text-[11px] mt-0.5">
                             Peak Mcap: {formatUsd(launch.peakMcap)} • Current: {formatUsd(launch.currentMcap)}
                           </div>
                         </div>
                         {launch.liquidityRemoved && (
-                          <span className="text-rose-400 font-bold text-xs">
+                          <span className="text-rose-500 dark:text-rose-400 font-semibold text-xs">
                             LP Removed: {launch.liquidityRemovedAmountUsd ? `$${launch.liquidityRemovedAmountUsd.toLocaleString()}` : 'Yes'}
                           </span>
                         )}
@@ -378,34 +379,34 @@ export const TokenDetailPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-slate-400">No historical deployments indexed.</p>
+              <p className="text-[var(--text-muted)]">No historical deployments indexed.</p>
             )}
           </div>
         )}
 
         {/* TAB: HOLDERS */}
         {activeTab === 'HOLDERS' && (
-          <div className="terminal-card p-6 space-y-4">
-            <h3 className="font-bold text-sm text-slate-100 border-b border-slate-800 pb-2">
+          <div className="terminal-card p-4 sm:p-6 space-y-4">
+            <h3 className="font-semibold text-sm text-[var(--text-primary)] border-b border-[var(--card-border)] pb-2">
               TOKEN HOLDER CONCENTRATION
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                <span className="text-slate-400 text-[10px]">TOTAL HOLDERS</span>
-                <div className="text-base font-bold text-white mt-0.5">{token.holdersCount.toLocaleString()}</div>
+              <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">TOTAL HOLDERS</span>
+                <div className="text-base font-semibold text-[var(--text-primary)] mt-0.5">{token.holdersCount.toLocaleString()}</div>
               </div>
-              <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                <span className="text-slate-400 text-[10px]">TOP 10 CONCENTRATION</span>
-                <div className="text-base font-bold text-cyan-300 mt-0.5">
+              <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">TOP 10 CONCENTRATION</span>
+                <div className="text-base font-semibold text-sky-600 dark:text-sky-400 mt-0.5">
                   {rugAudit?.solana?.top10HoldersPercent || rugAudit?.evm?.top10HoldersPercent || 22}%
                 </div>
               </div>
-              <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                <span className="text-slate-400 text-[10px]">24H HOLDER GROWTH</span>
-                <div className="text-base font-bold text-emerald-400 mt-0.5">+{token.holderGrowth24hPercent}%</div>
+              <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">24H HOLDER GROWTH</span>
+                <div className="text-base font-semibold text-emerald-500 dark:text-emerald-400 mt-0.5">+{token.holderGrowth24hPercent}%</div>
               </div>
             </div>
-            <p className="text-slate-400 text-xs">
+            <p className="text-[var(--text-muted)] text-xs">
               Top holders distribution is within healthy bounds with no single non-LP wallet exceeding 6% of circulating supply.
             </p>
           </div>
@@ -413,63 +414,63 @@ export const TokenDetailPage: React.FC = () => {
 
         {/* TAB: WALLETS */}
         {activeTab === 'WALLETS' && (
-          <div className="terminal-card p-6 space-y-4">
-            <h3 className="font-bold text-sm text-slate-100 border-b border-slate-800 pb-2">
+          <div className="terminal-card p-4 sm:p-6 space-y-4">
+            <h3 className="font-semibold text-sm text-[var(--text-primary)] border-b border-[var(--card-border)] pb-2">
               COORDINATED WALLET CLUSTER &amp; SMART MONEY
             </h3>
             {primaryCluster ? (
               <div className="space-y-3">
-                <div className="bg-slate-950 p-4 rounded border border-slate-800 flex items-center justify-between">
+                <div className="bg-black/5 dark:bg-zinc-950/70 p-4 rounded border border-[var(--card-border)] flex items-center justify-between">
                   <div>
-                    <span className="text-cyan-400 font-bold">{primaryCluster.label}</span>
-                    <p className="text-slate-300 text-xs mt-1">{primaryCluster.evidenceSummary}</p>
+                    <span className="text-sky-600 dark:text-sky-400 font-semibold">{primaryCluster.label}</span>
+                    <p className="text-[var(--text-muted)] text-xs mt-1">{primaryCluster.evidenceSummary}</p>
                   </div>
-                  <span className="px-2.5 py-1 rounded text-xs bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  <span className="px-2.5 py-1 rounded text-xs bg-sky-500/10 text-sky-600 dark:text-sky-300 border border-sky-500/30 font-semibold">
                     {primaryCluster.confidence} Confidence
                   </span>
                 </div>
 
-                <h4 className="font-bold text-slate-300 text-xs">Cluster Wallets ({primaryCluster.members.length}):</h4>
+                <h4 className="font-semibold text-[var(--text-primary)] text-xs">Cluster Wallets ({primaryCluster.members.length}):</h4>
                 <div className="space-y-1.5">
                   {primaryCluster.members.map((m, idx) => (
-                    <div key={idx} className="bg-slate-950 p-2.5 rounded border border-slate-800/80 flex items-center justify-between text-[11px]">
-                      <span className="text-slate-300">{m.walletAddress}</span>
-                      <span className="text-emerald-400 font-bold">{formatUsd(m.amountUsd)}</span>
-                      <span className="text-slate-400">{m.fundingSourceName || 'Direct'}</span>
-                      <span className="text-slate-500">{m.historicalTokensTogether} shared tokens</span>
+                    <div key={idx} className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)] flex items-center justify-between text-[11px]">
+                      <span className="text-[var(--text-primary)]">{m.walletAddress}</span>
+                      <span className="text-emerald-500 dark:text-emerald-400 font-semibold">{formatUsd(m.amountUsd)}</span>
+                      <span className="text-[var(--text-muted)]">{m.fundingSourceName || 'Direct'}</span>
+                      <span className="text-[var(--text-muted)]">{m.historicalTokensTogether} shared tokens</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <p className="text-slate-400">No anomalous cluster co-entries detected within initial launch window.</p>
+              <p className="text-[var(--text-muted)]">No anomalous cluster co-entries detected within initial launch window.</p>
             )}
           </div>
         )}
 
         {/* TAB: LIQUIDITY */}
         {activeTab === 'LIQUIDITY' && (
-          <div className="terminal-card p-6 space-y-4">
-            <h3 className="font-bold text-sm text-slate-100 border-b border-slate-800 pb-2">
+          <div className="terminal-card p-4 sm:p-6 space-y-4">
+            <h3 className="font-semibold text-sm text-[var(--text-primary)] border-b border-[var(--card-border)] pb-2">
               LIQUIDITY POOL METRICS
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                <span className="text-slate-400 text-[10px]">TOTAL POOL LIQUIDITY</span>
-                <div className="text-base font-bold text-cyan-300 mt-0.5">{formatUsd(token.liquidity)}</div>
+              <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">TOTAL POOL LIQUIDITY</span>
+                <div className="text-base font-semibold text-sky-600 dark:text-sky-400 mt-0.5">{formatUsd(token.liquidity)}</div>
               </div>
-              <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                <span className="text-slate-400 text-[10px]">24H LIQUIDITY DELTA</span>
-                <div className="text-base font-bold text-emerald-400 mt-0.5">+{token.liquidityChange24h}%</div>
+              <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">24H LIQUIDITY DELTA</span>
+                <div className="text-base font-semibold text-emerald-500 dark:text-emerald-400 mt-0.5">+{token.liquidityChange24h}%</div>
               </div>
-              <div className="bg-slate-950 p-3 rounded border border-slate-800">
-                <span className="text-slate-400 text-[10px]">LOCK / BURN VERIFICATION</span>
-                <div className="text-base font-bold text-white mt-0.5">
+              <div className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded border border-[var(--card-border)]">
+                <span className="text-[var(--text-muted)] text-[10px] uppercase font-medium">LOCK / BURN VERIFICATION</span>
+                <div className="text-base font-semibold text-[var(--text-primary)] mt-0.5">
                   {token.chain === 'solana' ? '100% LP Burned' : '100% Locked (PinkLock)'}
                 </div>
               </div>
             </div>
-            <p className="text-slate-400 text-xs">
+            <p className="text-[var(--text-muted)] text-xs">
               Liquidity depth provides sufficient exit headroom for standard retail size ($100 - $1,000) under normal market conditions.
             </p>
           </div>
@@ -477,8 +478,8 @@ export const TokenDetailPage: React.FC = () => {
 
         {/* TAB: TRANSACTIONS */}
         {activeTab === 'TRANSACTIONS' && (
-          <div className="terminal-card p-6 space-y-4">
-            <h3 className="font-bold text-sm text-slate-100 border-b border-slate-800 pb-2">
+          <div className="terminal-card p-4 sm:p-6 space-y-4">
+            <h3 className="font-semibold text-sm text-[var(--text-primary)] border-b border-[var(--card-border)] pb-2">
               RECENT ON-CHAIN TRANSACTIONS
             </h3>
             <div className="space-y-2">
@@ -488,14 +489,14 @@ export const TokenDetailPage: React.FC = () => {
                 { type: 'SELL', amount: '$1,100', wallet: '0x123f...c83b', time: '7m ago', tx: '0x5918...56', note: 'Creator Dump' },
                 { type: 'BUY', amount: '$8,400', wallet: '0x71c8...e875', time: '12m ago', tx: '0x6918...78' },
               ].map((tx, i) => (
-                <div key={i} className="bg-slate-950 p-2.5 rounded border border-slate-800 flex items-center justify-between text-xs">
-                  <span className={`font-bold ${tx.type === 'BUY' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <div key={i} className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)] flex items-center justify-between text-xs">
+                  <span className={`font-semibold ${tx.type === 'BUY' ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                     {tx.type}
                   </span>
-                  <span className="text-white font-bold">{tx.amount}</span>
-                  <span className="text-slate-400">{tx.wallet}</span>
-                  <span className="text-slate-500">{tx.time}</span>
-                  {tx.note && <span className="text-rose-400 text-[10px] font-bold">{tx.note}</span>}
+                  <span className="text-[var(--text-primary)] font-semibold">{tx.amount}</span>
+                  <span className="text-[var(--text-muted)]">{tx.wallet}</span>
+                  <span className="text-[var(--text-muted)]">{tx.time}</span>
+                  {tx.note && <span className="text-rose-500 dark:text-rose-400 text-[10px] font-semibold">{tx.note}</span>}
                 </div>
               ))}
             </div>
@@ -504,11 +505,11 @@ export const TokenDetailPage: React.FC = () => {
 
         {/* TAB: RISK */}
         {activeTab === 'RISK' && (
-          <div className="terminal-card p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="terminal-card p-4 sm:p-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--card-border)] pb-3">
               <div>
-                <h3 className="font-bold text-sm text-slate-100">DEDICATED RUG &amp; SCAM RISK AUDIT</h3>
-                <span className="text-slate-400 text-xs">Strict Separation of Fact, Indicator, and Inference</span>
+                <h3 className="font-semibold text-sm text-[var(--text-primary)]">DEDICATED RUG &amp; SCAM RISK AUDIT</h3>
+                <span className="text-[var(--text-muted)] text-xs">Strict Separation of Fact, Indicator, and Inference</span>
               </div>
               <RiskBadge level={riskLevel} size="md" />
             </div>
@@ -517,9 +518,9 @@ export const TokenDetailPage: React.FC = () => {
               <div className="space-y-3">
                 {/* Facts */}
                 <div className="space-y-1.5">
-                  <span className="font-bold text-cyan-400 block">OBSERVED FACTS:</span>
+                  <span className="font-semibold text-sky-600 dark:text-sky-400 block">OBSERVED FACTS:</span>
                   {rugAudit.facts.map((f) => (
-                    <div key={f.id} className="bg-slate-950 p-2.5 rounded border border-slate-800 text-slate-200">
+                    <div key={f.id} className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)] text-[var(--text-primary)]">
                       {f.description}
                     </div>
                   ))}
@@ -527,9 +528,9 @@ export const TokenDetailPage: React.FC = () => {
 
                 {/* Indicators */}
                 <div className="space-y-1.5">
-                  <span className="font-bold text-amber-400 block">OBSERVED INDICATORS:</span>
+                  <span className="font-semibold text-amber-600 dark:text-amber-400 block">OBSERVED INDICATORS:</span>
                   {rugAudit.indicators.map((ind) => (
-                    <div key={ind.id} className="bg-slate-950 p-2.5 rounded border border-slate-800 text-slate-300">
+                    <div key={ind.id} className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)] text-[var(--text-primary)]">
                       {ind.description}
                     </div>
                   ))}
@@ -537,53 +538,54 @@ export const TokenDetailPage: React.FC = () => {
 
                 {/* Inferences */}
                 <div className="space-y-1.5">
-                  <span className="font-bold text-indigo-400 block">ANALYTICAL INFERENCES:</span>
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-400 block">ANALYTICAL INFERENCES:</span>
                   {rugAudit.inferences.map((inf) => (
-                    <div key={inf.id} className="bg-slate-950 p-2.5 rounded border border-slate-800 text-slate-400 italic">
+                    <div key={inf.id} className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)] text-[var(--text-muted)] italic">
                       {inf.description}
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <p className="text-slate-400">Audit in progress...</p>
+              <p className="text-[var(--text-muted)]">Audit in progress...</p>
             )}
           </div>
         )}
 
+
         {/* TAB: SCENARIOS */}
         {activeTab === 'SCENARIOS' && (
-          <div className="terminal-card p-6 space-y-4">
-            <h3 className="font-semibold text-sm text-zinc-100 border-b border-zinc-800 pb-2">
+          <div className="terminal-card p-4 sm:p-6 space-y-4">
+            <h3 className="font-semibold text-sm text-[var(--text-primary)] border-b border-[var(--card-border)] pb-2">
               2X TO 100X MATHEMATICAL SCENARIO MODELING
             </h3>
-            <p className="text-xs text-amber-400 bg-amber-500/10 p-2.5 rounded-md border border-amber-500/20">
+            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2.5 rounded-md border border-amber-500/20">
               DISCLAIMER: Multiples are mathematical models of required liquidity and capital inflow. They are never guaranteed outcomes.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {upsideScenarios.map((sc) => (
-                <div key={sc.multiple} className="bg-zinc-950/70 p-3 rounded-md border border-zinc-800 space-y-2">
-                  <div className="flex items-center justify-between font-semibold text-zinc-100 border-b border-zinc-800/80 pb-1">
-                    <span className="text-sky-400">{sc.multiple} UPSIDE</span>
+                <div key={sc.multiple} className="bg-black/5 dark:bg-zinc-950/70 p-3 rounded-md border border-[var(--card-border)] space-y-2">
+                  <div className="flex items-center justify-between font-semibold text-[var(--text-primary)] border-b border-[var(--card-border)] pb-1">
+                    <span className="text-sky-600 dark:text-sky-400">{sc.multiple} UPSIDE</span>
                     <span>{formatUsd(sc.targetMcap)}</span>
                   </div>
-                  <div className="space-y-1 text-[11px] text-zinc-400">
-                    <div>Target Price: <strong className="text-zinc-100">{formatUsd(sc.targetPrice, 6)}</strong></div>
-                    <div>Required Liq: <strong className="text-zinc-200">{formatUsd(sc.requiredLiquidity)}</strong></div>
-                    <div>Capital Inflow: <strong className="text-emerald-400">~{formatUsd(sc.requiredCapitalInflowUsd)}</strong></div>
+                  <div className="space-y-1 text-[11px] text-[var(--text-muted)]">
+                    <div>Target Price: <strong className="text-[var(--text-primary)]">{formatUsd(sc.targetPrice, 6)}</strong></div>
+                    <div>Required Liq: <strong className="text-[var(--text-primary)]">{formatUsd(sc.requiredLiquidity)}</strong></div>
+                    <div>Capital Inflow: <strong className="text-emerald-500 dark:text-emerald-400">~{formatUsd(sc.requiredCapitalInflowUsd)}</strong></div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <h4 className="font-semibold text-zinc-200 pt-2">Downside Scenarios:</h4>
+            <h4 className="font-semibold text-[var(--text-primary)] pt-2">Downside Scenarios:</h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {downsideScenarios.map((ds, i) => (
-                <div key={i} className="bg-rose-950/20 p-3 rounded-md border border-rose-900/40 space-y-1 text-[11px]">
-                  <span className="text-rose-400 font-semibold block">{ds.label}</span>
-                  <div className="text-zinc-300">Target Mcap: {formatUsd(ds.targetMcap)}</div>
-                  <p className="text-zinc-500 text-[10px]">{ds.triggerEvent}</p>
+                <div key={i} className="bg-rose-500/5 dark:bg-rose-950/20 p-3 rounded-md border border-rose-500/20 dark:border-rose-900/40 space-y-1 text-[11px]">
+                  <span className="text-rose-500 dark:text-rose-400 font-semibold block">{ds.label}</span>
+                  <div className="text-[var(--text-primary)]">Target Mcap: {formatUsd(ds.targetMcap)}</div>
+                  <p className="text-[var(--text-muted)] text-[10px]">{ds.triggerEvent}</p>
                 </div>
               ))}
             </div>
@@ -592,72 +594,72 @@ export const TokenDetailPage: React.FC = () => {
 
         {/* TAB: TRADE SETUP */}
         {activeTab === 'TRADE' && (
-          <div className="terminal-card p-6 max-w-xl mx-auto space-y-4">
-            <h3 className="font-semibold text-sm text-zinc-100 border-b border-zinc-800 pb-2">
+          <div className="terminal-card p-4 sm:p-6 max-w-xl mx-auto space-y-4">
+            <h3 className="font-semibold text-sm text-[var(--text-primary)] border-b border-[var(--card-border)] pb-2">
               CONFIGURE &amp; AUTHORIZE TRADE SETUP
             </h3>
             {tradeMessage && (
-              <div className="p-3 rounded-md bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs">
+              <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs">
                 {tradeMessage}
               </div>
             )}
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-zinc-300 mb-1 font-medium">Entry Trigger Price ($)</label>
+                <label className="block text-[var(--text-primary)] mb-1 font-medium">Entry Trigger Price ($)</label>
                 <input
                   type="number"
                   step="any"
                   value={entryTriggerPrice}
                   onChange={(e) => setEntryTriggerPrice(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                  className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
                 />
               </div>
               <div>
-                <label className="block text-zinc-300 mb-1 font-medium">Position Size (USD)</label>
+                <label className="block text-[var(--text-primary)] mb-1 font-medium">Position Size (USD)</label>
                 <input
                   type="number"
                   value={positionSizeUsd}
                   onChange={(e) => setPositionSizeUsd(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                  className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-zinc-300 mb-1 font-medium">Take Profit (+{takeProfitPercent}%)</label>
+                  <label className="block text-[var(--text-primary)] mb-1 font-medium">Take Profit (+{takeProfitPercent}%)</label>
                   <input
                     type="number"
                     value={takeProfitPercent}
                     onChange={(e) => setTakeProfitPercent(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                    className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-300 mb-1 font-medium">Stop Loss (-{stopLossPercent}%)</label>
+                  <label className="block text-[var(--text-primary)] mb-1 font-medium">Stop Loss (-{stopLossPercent}%)</label>
                   <input
                     type="number"
                     value={stopLossPercent}
                     onChange={(e) => setStopLossPercent(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                    className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-zinc-300 mb-1 font-medium">Max Slippage (%)</label>
+                  <label className="block text-[var(--text-primary)] mb-1 font-medium">Max Slippage (%)</label>
                   <input
                     type="number"
                     step="0.1"
                     value={maxSlippagePercent}
                     onChange={(e) => setMaxSlippagePercent(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500"
+                    className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-300 mb-1 font-medium">Order Expiry</label>
+                  <label className="block text-[var(--text-primary)] mb-1 font-medium">Order Expiry</label>
                   <select
                     value={expiryHours}
                     onChange={(e) => setExpiryHours(parseInt(e.target.value))}
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-2 text-zinc-100 focus:outline-none focus:border-zinc-500 cursor-pointer"
+                    className="w-full bg-white dark:bg-zinc-950 border border-[var(--card-border)] rounded-md p-2.5 text-[var(--text-primary)] focus:outline-none focus:border-sky-500 cursor-pointer transition"
                   >
                     <option value="6">6 Hours</option>
                     <option value="12">12 Hours</option>
@@ -667,46 +669,46 @@ export const TokenDetailPage: React.FC = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-zinc-300 mb-1 font-medium">Order Execution Mode</label>
+                <label className="block text-[var(--text-primary)] mb-1 font-medium">Order Execution Mode</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setOrderType('TRIGGER_LIMIT')}
                     className={`p-2.5 rounded-md border text-xs text-left transition ${
-                      orderType === 'TRIGGER_LIMIT' ? 'bg-zinc-800 border-zinc-600 text-zinc-100 font-semibold shadow-sm' : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
+                      orderType === 'TRIGGER_LIMIT' ? 'bg-sky-500/15 border-sky-500/40 text-sky-600 dark:text-sky-300 font-semibold' : 'bg-black/5 dark:bg-zinc-950/60 border-[var(--card-border)] text-[var(--text-muted)] hover:bg-black/10 dark:hover:bg-zinc-900'
                     }`}
                   >
-                    <div>TRIGGER LIMIT</div>
-                    <div className="text-[10px] text-zinc-500 font-normal mt-0.5">Execute only at or better than trigger price</div>
+                    <div className="font-semibold">TRIGGER LIMIT</div>
+                    <div className="text-[10px] text-[var(--text-muted)] font-normal mt-0.5">Execute only at or better than trigger</div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setOrderType('TRIGGER_MARKET')}
                     className={`p-2.5 rounded-md border text-xs text-left transition ${
-                      orderType === 'TRIGGER_MARKET' ? 'bg-zinc-800 border-zinc-600 text-zinc-100 font-semibold shadow-sm' : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:bg-zinc-900'
+                      orderType === 'TRIGGER_MARKET' ? 'bg-sky-500/15 border-sky-500/40 text-sky-600 dark:text-sky-300 font-semibold' : 'bg-black/5 dark:bg-zinc-950/60 border-[var(--card-border)] text-[var(--text-muted)] hover:bg-black/10 dark:hover:bg-zinc-900'
                     }`}
                   >
-                    <div>TRIGGER MARKET</div>
-                    <div className="text-[10px] text-zinc-500 font-normal mt-0.5">Market order upon trigger condition</div>
+                    <div className="font-semibold">TRIGGER MARKET</div>
+                    <div className="text-[10px] text-[var(--text-muted)] font-normal mt-0.5">Market order upon trigger condition</div>
                   </button>
                 </div>
               </div>
-              <div className="bg-zinc-950/80 p-3 rounded-md border border-zinc-700/80">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
+              <div className="bg-black/5 dark:bg-zinc-950/80 p-3 rounded-md border border-[var(--card-border)]">
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={humanConfirmed}
                     onChange={(e) => setHumanConfirmed(e.target.checked)}
-                    className="w-4 h-4 rounded text-sky-500 bg-zinc-900 border-zinc-700 focus:ring-0"
+                    className="mt-0.5 w-4 h-4 rounded text-sky-500 bg-white dark:bg-zinc-900 border-[var(--card-border)] focus:ring-0 cursor-pointer"
                   />
-                  <span className="text-zinc-300 text-[11px]">
+                  <span className="text-[var(--text-primary)] text-[11px] leading-relaxed">
                     I authorize the bot to execute only within these exact parameters once the market price reaches the trigger.
                   </span>
                 </label>
               </div>
               <button
                 onClick={handleTradeSubmit}
-                className="w-full py-2.5 rounded-md bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold transition shadow-sm"
+                className="w-full py-2.5 rounded-md bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold transition shadow-sm text-xs font-mono"
               >
                 ARM BOT WITH HUMAN AUTHORIZATION
               </button>

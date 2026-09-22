@@ -3,39 +3,80 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    background-color: #090a0f;
-    color: #e4e4e7;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  :root {
+    --bg-app: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border-subtle: #e2e8f0;
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --card-hover: #f1f5f9;
   }
 
-  /* Custom refined dark terminal scrollbars */
+  html.dark {
+    --bg-app: #090a0f;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --border-subtle: #1e222d;
+    --card-bg: #12141c;
+    --card-border: #1e222d;
+    --card-hover: #161924;
+  }
+
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Custom refined scrollbars */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #090a0f;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #27272a;
+    background: #cbd5e1;
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  html.dark ::-webkit-scrollbar-thumb {
+    background: #27272a;
+  }
+  html.dark ::-webkit-scrollbar-thumb:hover {
     background: #3f3f46;
   }
 }
 
 .terminal-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.625rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+html.dark .terminal-card {
   background-color: #12141c;
   border: 1px solid #1e222d;
-  border-radius: 0.625rem;
+  box-shadow: none;
 }
 
 .terminal-card-hover {
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .terminal-card-hover:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+html.dark .terminal-card-hover:hover {
   background-color: #161924;
   border-color: #2b3242;
 }
@@ -51,4 +92,13 @@
   50% {
     opacity: 0.3;
   }
+}
+
+/* Hide scrollbar on touch / mobile tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

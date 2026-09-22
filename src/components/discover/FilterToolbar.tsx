@@ -8,18 +8,18 @@ export const FilterToolbar: React.FC = () => {
 
   const categories: { id: TokenTag | 'all'; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'all', label: 'ALL TOKENS', icon: Sparkles },
-    { id: 'new', label: 'NEW TOKENS', icon: Sparkles },
-    { id: 'hot', label: 'HOT TOKENS', icon: Flame },
+    { id: 'new', label: 'NEW LAUNCHES', icon: Sparkles },
+    { id: 'hot', label: 'HIGH MOMENTUM', icon: Flame },
     { id: 'smart_money', label: 'SMART MONEY', icon: Users },
-    { id: 'dev_alert', label: 'DEVELOPER ALERTS', icon: AlertTriangle },
+    { id: 'dev_alert', label: 'DEV ALERTS', icon: AlertTriangle },
     { id: 'high_risk', label: 'HIGH RISK', icon: AlertTriangle },
     { id: 'watchlist', label: 'WATCHLIST', icon: Eye },
   ];
 
   return (
-    <div className="bg-[#0c0e14] border-b border-zinc-800/80 p-3 space-y-3">
+    <div className="bg-white dark:bg-[#0c0e14] border-b border-slate-200 dark:border-zinc-800/80 p-2.5 sm:p-3 space-y-2.5 sm:space-y-3 transition-colors">
       {/* Category Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
         {categories.map((cat) => {
           const Icon = cat.icon;
           const isSelected = (filter.tag || 'all') === cat.id;
@@ -27,10 +27,10 @@ export const FilterToolbar: React.FC = () => {
             <button
               key={cat.id}
               onClick={() => setFilter({ tag: cat.id })}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs font-mono transition-all whitespace-nowrap ${
                 isSelected
-                  ? 'bg-zinc-800 text-zinc-100 border border-zinc-700 font-semibold shadow-sm'
-                  : 'bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 border border-zinc-800/80 hover:bg-zinc-900'
+                  ? 'bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm border border-slate-900 dark:border-zinc-700'
+                  : 'bg-slate-100 dark:bg-zinc-900/60 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 border border-slate-200 dark:border-zinc-800/80 hover:bg-slate-200 dark:hover:bg-zinc-900'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -41,43 +41,43 @@ export const FilterToolbar: React.FC = () => {
       </div>
 
       {/* Search & Sliders Row */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-        <div className="relative flex-1 min-w-[240px] max-w-md">
-          <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 text-xs font-mono">
+        <div className="relative flex-1 max-w-full sm:max-w-md">
+          <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
           <input
             type="text"
-            placeholder="Search by name, symbol, or contract address..."
+            placeholder="Search by name, symbol, or address..."
             value={filter.searchQuery || ''}
             onChange={(e) => setFilter({ searchQuery: e.target.value })}
-            className="w-full bg-zinc-950/80 border border-zinc-800 rounded-md pl-9 pr-3 py-1.5 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition"
+            className="w-full bg-slate-50 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800 rounded-md pl-9 pr-3 py-1.5 text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600 transition"
           />
         </div>
 
-        {/* Filters: Liquidity & Chain */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-500" />
-            <span>Min Liq:</span>
+        {/* Filters: Liquidity & Age */}
+        <div className="flex items-center justify-between sm:justify-end gap-3 text-slate-600 dark:text-zinc-400">
+          <div className="flex items-center gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
+            <span className="hidden sm:inline">Min Liq:</span>
             <select
               value={filter.minLiquidity}
               onChange={(e) => setFilter({ minLiquidity: Number(e.target.value) })}
-              className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-zinc-200 focus:outline-none cursor-pointer"
+              className="bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded px-2 py-1 text-slate-800 dark:text-zinc-200 focus:outline-none cursor-pointer"
             >
-              <option value="0">Any</option>
+              <option value="0">Any Liq</option>
               <option value="10000">$10K+</option>
               <option value="50000">$50K+</option>
               <option value="100000">$100K+</option>
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <span>Max Age:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="hidden sm:inline">Max Age:</span>
             <select
               value={filter.maxAgeHours}
               onChange={(e) => setFilter({ maxAgeHours: Number(e.target.value) })}
-              className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-zinc-200 focus:outline-none cursor-pointer"
+              className="bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded px-2 py-1 text-slate-800 dark:text-zinc-200 focus:outline-none cursor-pointer"
             >
-              <option value="24">&lt; 24 Hours</option>
+              <option value="24">&lt; 24h</option>
               <option value="72">&lt; 3 Days</option>
               <option value="168">&lt; 7 Days</option>
               <option value="720">&lt; 30 Days</option>
