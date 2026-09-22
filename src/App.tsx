@@ -8,6 +8,7 @@ import { FlowRadarPage } from './pages/FlowRadarPage';
 import { TokenDetailPage } from './pages/TokenDetailPage';
 import { DevelopersPage } from './pages/DevelopersPage';
 import { WalletsPage } from './pages/WalletsPage';
+import { ChineseAlphaPage } from './pages/ChineseAlphaPage';
 import { SetupsPage } from './pages/SetupsPage';
 import { PositionsPage } from './pages/PositionsPage';
 import { HistoryPage } from './pages/HistoryPage';
@@ -74,6 +75,7 @@ export const App: React.FC = () => {
         {activeNav === 'TOKEN_DETAIL' && <TokenDetailPage />}
         {activeNav === 'DEVELOPERS' && <DevelopersPage />}
         {activeNav === 'WALLETS' && <WalletsPage />}
+        {activeNav === 'CHINESE_ALPHA' && <ChineseAlphaPage />}
         {activeNav === 'SETUPS' && <SetupsPage />}
         {activeNav === 'POSITIONS' && <PositionsPage />}
         {activeNav === 'HISTORY' && <HistoryPage />}

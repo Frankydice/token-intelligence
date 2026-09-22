@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Compass, Activity, FileSearch, Users, Network, Clock, DollarSign, History, FileText, Settings } from 'lucide-react';
+import { Compass, Activity, FileSearch, Users, Network, Globe, Clock, DollarSign, History, FileText, Settings } from 'lucide-react';
 import { useTradingStore } from '../../store/useTradingStore';
 import { analyzeFlowRadar } from '../../engines/flowRadarEngine';
 
@@ -20,6 +20,7 @@ export const Navigation: React.FC = () => {
     { id: 'TOKEN_DETAIL', label: 'TOKEN DETAIL', icon: FileSearch },
     { id: 'DEVELOPERS', label: 'DEVELOPERS', icon: Users },
     { id: 'WALLETS', label: 'CLUSTERS & WHALES', icon: Network },
+    { id: 'CHINESE_ALPHA', label: 'CHINESE & CABALS', icon: Globe },
     {
       id: 'SETUPS',
       label: 'TRADE SETUPS',

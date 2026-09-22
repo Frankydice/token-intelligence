@@ -117,3 +117,30 @@ export interface FlowAlert {
   timestamp: number;
 }
 
+export type ChineseCabalType =
+  | 'BINANCE_CABAL'
+  | 'CHINESE_WHALE_SYNDICATE'
+  | 'WECHAT_ALPHA_GROUP'
+  | 'ASIAN_SMART_MONEY';
+
+export interface ChineseCommunityActivity {
+  id: string;
+  type: 'DEPLOYMENT' | 'BUY_ACCUMULATION' | 'SELL_EXIT';
+  cabalType: ChineseCabalType;
+  tokenAddress: string;
+  tokenSymbol: string;
+  tokenName: string;
+  chineseNameTranslate?: string; // English translation/cultural explanation of the name/symbol
+  chain: Chain;
+  actorAddress: string;
+  actorLabel: string; // e.g. "Binance VIP Cabal 01", "WeChat Alpha Ring 88", "OKX High-Net-Worth Whale"
+  actionAmountUsd: number;
+  tokenPriceUsd: number;
+  priceChange24h: number;
+  txHash: string;
+  narrativeTag: string; // e.g. "Binance Listing Speculation", "WeChat Viral Call", "Chinese Lore Meta"
+  timestamp: number;
+  notes: string;
+}
+
+
