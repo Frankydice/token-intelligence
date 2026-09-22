@@ -108,7 +108,13 @@ async function hydrateStorage() {
         chatId: savedSettings.telegramChatId || '',
         enabled: savedSettings.telegramAlertsEnabled,
       });
+      if (savedSettings.solanaWsUrl) {
+        solanaWsListener.setEndpoint(savedSettings.solanaWsUrl);
+      }
     }
+
+    // Auto-connect Solana real-time WebSocket on terminal startup
+    solanaWsListener.connect();
 
     notify();
   } catch (err) {
@@ -195,6 +201,9 @@ solanaWsListener.onNewLaunch((event) => {
     notify();
   }
 });
+
+// Auto-start Solana WebSocket connection on application load
+solanaWsListener.connect();
 
 async function performTokenRefresh() {
   if (globalState.isScanning) return;
@@ -637,6 +646,9 @@ export function useTradingStore() {
   const updateSettings = useCallback((newSettings: Partial<PersistedAppSettings>) => {
     const merged = { ...globalState.settings, ...newSettings };
     globalState = { ...globalState, settings: merged };
+    if (newSettings.solanaWsUrl) {
+      solanaWsListener.setEndpoint(newSettings.solanaWsUrl);
+    }
     telegramBotService.setConfig({
       botToken: merged.telegramBotToken || '',
       chatId: merged.telegramChatId || '',

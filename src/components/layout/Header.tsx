@@ -59,7 +59,7 @@ export const Header: React.FC = () => {
                 }`}
                 title="Solana WebSocket logsSubscribe status. Click to connect or disconnect."
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${solanaWsStatus === 'CONNECTED' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                <span className={`w-1.5 h-1.5 rounded-full ${solanaWsStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
                 SOL WSS: {solanaWsStatus}
               </button>
 

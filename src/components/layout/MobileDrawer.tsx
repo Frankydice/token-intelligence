@@ -121,7 +121,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
           >
             <div>
               <div className="flex items-center gap-1.5 font-medium text-[11px]">
-                <span className={`w-1.5 h-1.5 rounded-full ${solanaWsStatus === 'CONNECTED' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${solanaWsStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                 <span>SOL WSS</span>
               </div>
               <span className="text-[9px] block text-slate-400 dark:text-zinc-500 mt-0.5">
