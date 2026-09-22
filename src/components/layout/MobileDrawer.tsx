@@ -16,6 +16,7 @@ import {
 import { useTradingStore } from '../../store/useTradingStore';
 import { useTheme } from '../../context/ThemeContext';
 import { formatUsd } from '../../utils/formatters';
+import { WalletProfileDropdown } from '../wallet/WalletProfileDropdown';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -86,6 +87,15 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Web3 Non-Custodial Wallet Section */}
+        <div className="bg-slate-50 dark:bg-zinc-900/40 p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-2">
+          <div className="flex flex-col">
+            <span className="font-mono text-[10px] text-slate-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">Web3 Wallet</span>
+            <span className="font-mono text-[11px] text-slate-700 dark:text-zinc-300">Non-custodial access</span>
+          </div>
+          <WalletProfileDropdown />
         </div>
 
         {/* Quick Actions Row: Theme Toggle + Solana WSS + Robinhood L2 */}

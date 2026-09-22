@@ -4,6 +4,7 @@ import { useTradingStore } from '../../store/useTradingStore';
 import { useTheme } from '../../context/ThemeContext';
 import { useDevice } from '../../hooks/useDevice';
 import { formatUsd } from '../../utils/formatters';
+import { WalletProfileDropdown } from '../wallet/WalletProfileDropdown';
 
 export const Header: React.FC = () => {
   const {
@@ -165,6 +166,9 @@ export const Header: React.FC = () => {
             <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin text-sky-500 dark:text-sky-400' : 'text-slate-400 dark:text-zinc-400'}`} />
             <span className="hidden sm:inline">{isScanning ? 'SCANNING...' : 'SCAN POOLS'}</span>
           </button>
+
+          {/* Web3 Non-Custodial Wallet Connector & Profile */}
+          <WalletProfileDropdown />
 
           {/* Safe Public Execution Badge (Desktop Only) */}
           <div
