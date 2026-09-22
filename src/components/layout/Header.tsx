@@ -36,7 +36,9 @@ export const Header: React.FC = () => {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               <span className="font-bold text-xs sm:text-sm tracking-wide text-slate-900 dark:text-zinc-100 font-mono truncate">
-                TOKEN INTELLIGENCE <span className="text-sky-600 dark:text-sky-400 font-semibold">&amp; SNIPER</span>
+                <span className="sm:hidden">TOKEN INTEL</span>
+                <span className="hidden sm:inline">TOKEN INTELLIGENCE</span>{' '}
+                <span className="text-sky-600 dark:text-sky-400 font-semibold">&amp; SNIPER</span>
               </span>
 
               {/* Status Badge */}
