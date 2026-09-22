@@ -149,11 +149,13 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
         const riskScore = Math.min(95, Math.max(10, Math.round(risk)));
 
         // Dynamic tags
-        const tags: ('new' | 'hot' | 'smart_money' | 'dev_alert' | 'high_risk')[] = ['new'];
+        const tags: ('new' | 'hot' | 'smart_money' | 'dev_alert' | 'high_risk' | 'urgent_dump' | 'cluster_buying')[] = ['new'];
         if (volume24h > 200000 || priceChange24h > 25) tags.push('hot');
         if (buyRatio > 1.4 && liquidity > 30000) tags.push('smart_money');
         if (riskScore >= 65) tags.push('high_risk');
         if (riskScore >= 75) tags.push('dev_alert');
+        if (buyRatio < 0.65 || priceChange24h < -15) tags.push('urgent_dump');
+        if (buyRatio > 1.35 && (volume24h > 15000 || opportunityScore > 65)) tags.push('cluster_buying');
 
         // Dynamic creator address representation
         const creatorAddress = mappedChain === 'solana'

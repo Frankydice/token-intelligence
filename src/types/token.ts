@@ -1,6 +1,6 @@
 export type Chain = 'solana' | 'bsc' | 'base' | 'ethereum';
 
-export type TokenTag = 'new' | 'hot' | 'watchlist' | 'high_risk' | 'dev_alert' | 'smart_money';
+export type TokenTag = 'new' | 'hot' | 'watchlist' | 'high_risk' | 'dev_alert' | 'smart_money' | 'urgent_dump' | 'cluster_buying';
 
 export interface Token {
   id: string;

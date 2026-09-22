@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   TrendingUp,
   ShieldCheck,
   Copy,
   Check,
   ExternalLink,
+  AlertTriangle,
 } from 'lucide-react';
 import { useTradingStore } from '../store/useTradingStore';
 import { formatUsd, formatPercent, truncateAddress, getExplorerUrl } from '../utils/formatters';
@@ -15,6 +16,7 @@ import { RugRiskAudit } from '../types/risk';
 import { WalletCluster } from '../types/wallet';
 import { calculateUpsideScenarios, calculateDownsideScenarios } from '../utils/math';
 import { TradeSetupDraft, OrderType } from '../types/trade';
+import { detectTiedWalletRings } from '../engines/clusterIntelEngine';
 
 export const TokenDetailPage: React.FC = () => {
   const { selectedToken, tokens, openOpportunityReport, approveTradeSetup } = useTradingStore();
@@ -23,6 +25,7 @@ export const TokenDetailPage: React.FC = () => {
 
   // If no token selected, pick first token
   const token = selectedToken || tokens[0];
+  const tiedRing = useMemo(() => (token ? detectTiedWalletRings([token])[0] : null), [token]);
 
   const [devProfile, setDevProfile] = useState<DeveloperProfile | null>(null);
   const [rugAudit, setRugAudit] = useState<RugRiskAudit | null>(null);
@@ -418,6 +421,48 @@ export const TokenDetailPage: React.FC = () => {
             <h3 className="font-semibold text-sm text-[var(--text-primary)] border-b border-[var(--card-border)] pb-2">
               COORDINATED WALLET CLUSTER &amp; SMART MONEY
             </h3>
+
+            {/* TIED WALLET PUPPET / WASH DUMP SCHEME */}
+            {tiedRing && (
+              <div className="bg-rose-500/10 border border-rose-500/30 rounded-lg p-3.5 space-y-3">
+                <div className="flex items-center justify-between gap-2 border-b border-rose-500/20 pb-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                    <span className="font-bold text-rose-600 dark:text-rose-400">
+                      TIED-WALLET PUPPET SCHEME: {tiedRing.tactic.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <span className="font-bold text-xs text-rose-600 dark:text-rose-400">
+                    Net Extracted: -{formatUsd(tiedRing.netExtractedUsd)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+                  {tiedRing.explanation}
+                </p>
+
+                {/* Micro Tree View */}
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="p-2 rounded bg-black/5 dark:bg-zinc-900 border border-sky-500/30 flex items-center justify-between">
+                    <span className="font-bold text-sky-600 dark:text-sky-400">Master Root: {tiedRing.commonFunderAddress}</span>
+                    <span className="text-[10px] text-[var(--text-muted)]">Dispensed Initial Funds</span>
+                  </div>
+                  <div className="pl-4 border-l-2 border-dashed border-rose-400/40 space-y-1">
+                    {tiedRing.pumpWallets.map((p, idx) => (
+                      <div key={idx} className="flex justify-between items-center bg-emerald-500/5 p-1.5 rounded border border-emerald-500/20">
+                        <span className="text-emerald-600 dark:text-emerald-400">↳ Puppet {idx + 1} (Bait Buyer): {truncateAddress(p.address, 6)}</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">+{formatUsd(p.actionUsd)} Buy</span>
+                      </div>
+                    ))}
+                    {tiedRing.dumpWallets.map((d, idx) => (
+                      <div key={idx} className="flex justify-between items-center bg-rose-500/5 p-1.5 rounded border border-rose-500/20">
+                        <span className="text-rose-600 dark:text-rose-400">↳ Puppet {idx + 1 + tiedRing.pumpWallets.length} (Disguised Dumper): {truncateAddress(d.address, 6)}</span>
+                        <span className="font-bold text-rose-600 dark:text-rose-400">-{formatUsd(d.actionUsd)} Dump</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
             {primaryCluster ? (
               <div className="space-y-3">
                 <div className="bg-black/5 dark:bg-zinc-950/70 p-4 rounded border border-[var(--card-border)] flex items-center justify-between">

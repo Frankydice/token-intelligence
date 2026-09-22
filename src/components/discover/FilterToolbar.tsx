@@ -10,6 +10,8 @@ export const FilterToolbar: React.FC = () => {
     { id: 'all', label: 'ALL TOKENS', icon: Sparkles },
     { id: 'new', label: 'NEW LAUNCHES', icon: Sparkles },
     { id: 'hot', label: 'HIGH MOMENTUM', icon: Flame },
+    { id: 'cluster_buying', label: '🐳 CLUSTER BUYING', icon: Users },
+    { id: 'urgent_dump', label: '🚨 URGENT DUMPS', icon: AlertTriangle },
     { id: 'smart_money', label: 'SMART MONEY', icon: Users },
     { id: 'dev_alert', label: 'DEV ALERTS', icon: AlertTriangle },
     { id: 'high_risk', label: 'HIGH RISK', icon: AlertTriangle },

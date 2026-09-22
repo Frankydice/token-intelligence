@@ -4,6 +4,7 @@ import { Navigation } from './components/layout/Navigation';
 import { MobileNavigation } from './components/layout/MobileNavigation';
 import { MobileDrawer } from './components/layout/MobileDrawer';
 import { DiscoverPage } from './pages/DiscoverPage';
+import { FlowRadarPage } from './pages/FlowRadarPage';
 import { TokenDetailPage } from './pages/TokenDetailPage';
 import { DevelopersPage } from './pages/DevelopersPage';
 import { WalletsPage } from './pages/WalletsPage';
@@ -69,6 +70,7 @@ export const App: React.FC = () => {
       {/* Viewport Content with mobile bottom navigation bar spacing */}
       <main className="flex-1 flex flex-col overflow-hidden relative pb-16 md:pb-0">
         {activeNav === 'DISCOVER' && <DiscoverPage />}
+        {activeNav === 'FLOW_RADAR' && <FlowRadarPage />}
         {activeNav === 'TOKEN_DETAIL' && <TokenDetailPage />}
         {activeNav === 'DEVELOPERS' && <DevelopersPage />}
         {activeNav === 'WALLETS' && <WalletsPage />}

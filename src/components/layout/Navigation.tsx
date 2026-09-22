@@ -1,15 +1,25 @@
-import React from 'react';
-import { Compass, FileSearch, Users, Network, Clock, DollarSign, History, FileText, Settings } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Compass, Activity, FileSearch, Users, Network, Clock, DollarSign, History, FileText, Settings } from 'lucide-react';
 import { useTradingStore } from '../../store/useTradingStore';
+import { analyzeFlowRadar } from '../../engines/flowRadarEngine';
 
 export const Navigation: React.FC = () => {
-  const { activeNav, setActiveNav, pendingSetups, openPositions, auditLogs } = useTradingStore();
+  const { tokens, activeNav, setActiveNav, pendingSetups, openPositions, auditLogs } = useTradingStore();
+
+  const { dumps } = useMemo(() => analyzeFlowRadar(tokens), [tokens]);
 
   const navItems = [
     { id: 'DISCOVER', label: 'DISCOVER', icon: Compass },
+    {
+      id: 'FLOW_RADAR',
+      label: 'FLOW RADAR',
+      icon: Activity,
+      badge: dumps.length > 0 ? dumps.length : undefined,
+      badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30',
+    },
     { id: 'TOKEN_DETAIL', label: 'TOKEN DETAIL', icon: FileSearch },
     { id: 'DEVELOPERS', label: 'DEVELOPERS', icon: Users },
-    { id: 'WALLETS', label: 'WALLETS', icon: Network },
+    { id: 'WALLETS', label: 'CLUSTERS & WHALES', icon: Network },
     {
       id: 'SETUPS',
       label: 'TRADE SETUPS',
@@ -50,7 +60,7 @@ export const Navigation: React.FC = () => {
             <Icon className="w-3.5 h-3.5" />
             <span>{item.label}</span>
             {item.badge !== undefined && (
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold border bg-slate-200 text-slate-700 border-slate-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700/60">
+              <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${item.badgeColor || 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700/60'}`}>
                 {item.badge}
               </span>
             )}

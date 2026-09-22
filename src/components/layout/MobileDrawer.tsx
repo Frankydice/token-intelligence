@@ -10,6 +10,7 @@ import {
   Moon,
   ShieldAlert,
   Zap,
+  Activity,
 } from 'lucide-react';
 import { useTradingStore } from '../../store/useTradingStore';
 import { useTheme } from '../../context/ThemeContext';
@@ -40,8 +41,9 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
   const totalUnrealizedPnl = openPositions.reduce((acc, p) => acc + p.unrealizedPnlUsd, 0);
 
   const secondaryNavItems = [
+    { id: 'FLOW_RADAR', label: 'Flow Momentum & Dump Radar', icon: Activity, desc: 'Urgent exit alerts & breakout buy inflows' },
+    { id: 'WALLETS', label: 'Clusters, Whales & Tied Rings', icon: Network, desc: 'Puppet rings, wash dumps & whale buyers' },
     { id: 'DEVELOPERS', label: 'Deployer Intelligence Hub', icon: Users, desc: 'Creator wallet histories & LP pulls' },
-    { id: 'WALLETS', label: 'Wallet Cluster Tracker', icon: Network, desc: 'Sniper rings & co-entry blocks' },
     { id: 'HISTORY', label: 'Trade History', icon: History, desc: 'Completed executions & audit PnL' },
     { id: 'AUDIT', label: 'On-Chain Audit Log', icon: FileText, badge: auditLogs.length, desc: 'Immutable timeline of actions' },
     { id: 'SETTINGS', label: 'Settings & Guardrails', icon: Settings, desc: 'Risk limits, Telegram & endpoints' },

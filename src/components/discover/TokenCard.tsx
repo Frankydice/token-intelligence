@@ -49,11 +49,21 @@ export const TokenCard: React.FC<{ token: Token }> = ({ token }) => {
                 </span>
                 <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono shrink-0">${token.symbol}</span>
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                 <ChainBadge chain={token.chain} />
                 <span className="text-[11px] text-slate-400 dark:text-zinc-400 font-mono">
                   {token.ageHours < 24 ? `${token.ageHours}h` : `${(token.ageHours / 24).toFixed(1)}d`}
                 </span>
+                {token.tags.includes('urgent_dump') && (
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                    🚨 DUMP
+                  </span>
+                )}
+                {token.tags.includes('cluster_buying') && (
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+                    🐳 WHALE
+                  </span>
+                )}
               </div>
             </div>
           </div>
