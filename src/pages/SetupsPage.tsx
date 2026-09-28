@@ -51,6 +51,11 @@ export const SetupsPage: React.FC = () => {
                         <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                           WAITING FOR ENTRY
                         </span>
+                        {setup.sniperPreset && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                            {setup.sniperPreset.badge || setup.sniperPreset.name}
+                          </span>
+                        )}
                       </div>
                       <div className="text-[10px] text-[var(--text-muted)] mt-1">
                         Order ID: {setup.id} • Order Type: {setup.orderType}
@@ -102,6 +107,24 @@ export const SetupsPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Tranche Breakdown if Sniper Preset */}
+                {setup.sniperPreset && setup.sniperPreset.tranches.length > 1 && (
+                  <div className="bg-black/5 dark:bg-zinc-950/50 p-2.5 rounded-md border border-[var(--card-border)] space-y-1.5">
+                    <div className="text-[10px] text-[var(--text-muted)] font-bold flex items-center justify-between">
+                      <span className="text-amber-500">3-STEP TRANCHE EXECUTION PLAN</span>
+                      <span>Cut: {setup.sniperPreset.controlledJeet.stagnationCutMinutes}m Stagnation • Dev Dump Protection</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-[10px]">
+                      {setup.sniperPreset.tranches.map((tranche) => (
+                        <div key={tranche.step} className="bg-black/5 dark:bg-zinc-900/60 p-1.5 rounded border border-[var(--card-border)]">
+                          <span className="font-semibold text-[var(--text-primary)] block">Step {tranche.step}: {tranche.allocationPercent}%</span>
+                          <span className="text-sky-400 font-mono">{formatUsd(tranche.triggerPrice, 6)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Approval Signature Token */}
                 <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded-md border border-[var(--card-border)] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">

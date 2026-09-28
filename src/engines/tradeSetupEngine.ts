@@ -45,6 +45,7 @@ export class TradeSetupEngine {
       status: 'APPROVED_WAITING_ENTRY',
       userApprovalToken,
       isDemo: true, // will be updated based on active mode
+      sniperPreset: draft.sniperPreset,
     };
 
     return {

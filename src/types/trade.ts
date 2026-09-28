@@ -19,7 +19,46 @@ export type ExitReason =
   | 'TRAILING_STOP'
   | 'TIME_EXPIRY'
   | 'MANUAL_USER_EXIT'
-  | 'KILL_SWITCH';
+  | 'KILL_SWITCH'
+  | 'CONTROLLED_JEET_STAGNATION'
+  | 'CONTROLLED_JEET_DEV_DUMP'
+  | 'CONTROLLED_JEET_WASH_SPIKE';
+
+export type SniperPresetType =
+  | 'MARTINGALE_3_STEP'
+  | 'CONTROLLED_JEET_SCALP'
+  | 'MOONBAG_CONVICTION'
+  | 'CUSTOM';
+
+export interface TrancheConfig {
+  step: number; // 1, 2, 3
+  name: string; // 'Scout Entry', 'Dip Absorption', 'Breakout Confirmation'
+  allocationPercent: number; // e.g. 25, 35, 40
+  priceOffsetPercent: number; // e.g. 0, -25, +15 relative to trigger price
+  triggerPrice: number; // calculated dollar price
+  status: 'PENDING' | 'TRIGGERED' | 'EXECUTED' | 'CANCELLED';
+}
+
+export interface ControlledJeetRules {
+  hardStopLossPercent: number; // e.g. 30% max drawdown
+  stagnationCutMinutes: number; // e.g. 20 (cut 100% if flat/stagnant after 20m)
+  emergencyDevDumpCut: boolean; // instant cut if dev/tied wallet dumps >5%
+  emergencyWashSpikeCut: boolean; // cancel tranches & cut if wash score >60%
+}
+
+export interface SniperPresetConfig {
+  presetType: SniperPresetType;
+  name: string;
+  badge: string;
+  description: string;
+  tranches: TrancheConfig[];
+  controlledJeet: ControlledJeetRules;
+  takeProfit1Percent: number; // e.g. 100% (+100% = 2x)
+  takeProfit1SellPercent: number; // e.g. 50% (take capital off the table)
+  takeProfit2Percent: number; // e.g. 400% (+400% = 5x)
+  takeProfit2SellPercent: number; // e.g. 25%
+  moonbagPercent: number; // e.g. 25% (runner)
+}
 
 export interface TradeSetup {
   id: string;
@@ -45,6 +84,7 @@ export interface TradeSetup {
   userApprovalToken: string; // Non-empty string proves explicit human signature/approval
   notes?: string;
   isDemo: boolean;
+  sniperPreset?: SniperPresetConfig;
 }
 
 export interface Position {
@@ -75,6 +115,7 @@ export interface Position {
   realizedPnlUsd?: number;
   realizedPnlPercent?: number;
   isDemo: boolean;
+  sniperPreset?: SniperPresetConfig;
 }
 
 export interface TradeSetupDraft {
@@ -93,4 +134,5 @@ export interface TradeSetupDraft {
   maxSlippagePercent: number;
   orderType: OrderType;
   expiryHours: number;
+  sniperPreset?: SniperPresetConfig;
 }
