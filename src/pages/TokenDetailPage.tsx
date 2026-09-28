@@ -19,6 +19,7 @@ import { TradeSetupDraft, OrderType } from '../types/trade';
 import { detectTiedWalletRings } from '../engines/clusterIntelEngine';
 import { volumeAuthenticityEngine } from '../engines/volumeAuthenticityEngine';
 import { lifecycleEngine } from '../engines/lifecycleEngine';
+import { dipAndReclaimEngine } from '../engines/dipAndReclaimEngine';
 
 export const TokenDetailPage: React.FC = () => {
   const { selectedToken, tokens, openOpportunityReport, approveTradeSetup } = useTradingStore();
@@ -30,6 +31,7 @@ export const TokenDetailPage: React.FC = () => {
   const tiedRing = useMemo(() => (token ? detectTiedWalletRings([token])[0] : null), [token]);
   const volumeAudit = useMemo(() => (token ? volumeAuthenticityEngine.analyzeVolume(token) : null), [token]);
   const lifecycleAudit = useMemo(() => (token ? lifecycleEngine.analyzeLifecycle(token) : null), [token]);
+  const reclaimAudit = useMemo(() => (token ? dipAndReclaimEngine.analyzeToken(token) : null), [token]);
 
   const [devProfile, setDevProfile] = useState<DeveloperProfile | null>(null);
   const [rugAudit, setRugAudit] = useState<RugRiskAudit | null>(null);
@@ -88,6 +90,14 @@ export const TokenDetailPage: React.FC = () => {
     navigator.clipboard.writeText(token.address);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const handleApplyReclaimSetup = () => {
+    if (!reclaimAudit) return;
+    setEntryTriggerPrice(reclaimAudit.targetScenarios.entryPrice);
+    setTakeProfitPercent(100); // 2x TP1 ($200k target)
+    setStopLossPercent(20); // 20% SL (protecting migration floor break)
+    setActiveTab('TRADE_SETUP');
   };
 
   const handleTradeSubmit = () => {
@@ -414,6 +424,140 @@ export const TokenDetailPage: React.FC = () => {
                       <div key={i} className="text-[var(--text-muted)] flex items-center gap-1.5">
                         <span className="text-amber-500">•</span>
                         <span>{r}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Playbook Chapter 9: 100K Dip & Reclaim Signal Tracker */}
+            {reclaimAudit && (
+              <div
+                className={`terminal-card p-4 space-y-3 border-l-4 ${
+                  reclaimAudit.status === 'CONFIRMED_RECLAIM'
+                    ? 'border-l-emerald-500 bg-emerald-500/[0.02]'
+                    : reclaimAudit.status === 'TESTING_RECLAIM'
+                    ? 'border-l-amber-500'
+                    : 'border-l-zinc-700'
+                }`}
+              >
+                <div className="flex items-center justify-between border-b border-[var(--card-border)] pb-2 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🚀</span>
+                    <span className="font-semibold text-[var(--text-primary)]">
+                      100K DIP &amp; RECLAIM SETUP TRACKER
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono">Memecoin Playbook Ch. 9</span>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
+                        reclaimAudit.status === 'CONFIRMED_RECLAIM'
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 animate-pulse'
+                          : reclaimAudit.status === 'TESTING_RECLAIM'
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                          : reclaimAudit.status === 'FORMING_DIP'
+                          ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30'
+                          : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                      }`}
+                    >
+                      {reclaimAudit.statusLabel}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">CURRENT MCAP</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">
+                      {formatUsd(reclaimAudit.currentMarketCap)}
+                    </span>
+                  </div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">RECLAIM LEVEL</span>
+                    <span className="text-sm font-semibold text-emerald-500">
+                      $100,000 {reclaimAudit.currentMarketCap >= 100_000 ? '✅ RECLAIMED' : '⏳ TESTING'}
+                    </span>
+                  </div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">BUY/SELL TXN RATIO</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">
+                      {reclaimAudit.buyPressureRatio}x ({token.txns24hBuy}B / {token.txns24hSell}S)
+                    </span>
+                  </div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">SETUP CONFIDENCE</span>
+                    <span
+                      className={`text-sm font-bold ${
+                        reclaimAudit.confidence === 'HIGH'
+                          ? 'text-emerald-500'
+                          : reclaimAudit.confidence === 'MEDIUM'
+                          ? 'text-amber-500'
+                          : 'text-zinc-400'
+                      }`}
+                    >
+                      {reclaimAudit.confidence}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tactical Scenarios Grid (TP1, TP2, Runner, SL) */}
+                <div className="p-3 rounded bg-black/5 dark:bg-zinc-950/70 border border-[var(--card-border)] space-y-2">
+                  <div className="text-[11px] font-semibold text-[var(--text-primary)] flex items-center justify-between">
+                    <span>🎯 Playbook Exit Hierarchy (Ch. 9 Asymmetric Matrix):</span>
+                    {reclaimAudit.isReclaimSetup && (
+                      <button
+                        onClick={handleApplyReclaimSetup}
+                        className="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] font-mono transition shadow-sm"
+                      >
+                        Auto-Apply 100K Reclaim Order
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
+                    <div className="p-2 rounded bg-black/10 dark:bg-zinc-900/80 border border-[var(--card-border)]">
+                      <span className="text-[9px] text-[var(--text-muted)] block">STOP LOSS (-20%)</span>
+                      <span className="font-bold text-rose-500">
+                        ${reclaimAudit.targetScenarios.stopLossPrice}
+                      </span>
+                      <span className="text-[9px] text-zinc-500 block">Floor Break ($80K)</span>
+                    </div>
+                    <div className="p-2 rounded bg-black/10 dark:bg-zinc-900/80 border border-[var(--card-border)]">
+                      <span className="text-[9px] text-[var(--text-muted)] block">TAKE PROFIT 1 (2x)</span>
+                      <span className="font-bold text-emerald-500">
+                        ${reclaimAudit.targetScenarios.tp1Price}
+                      </span>
+                      <span className="text-[9px] text-zinc-500 block">50% Bag ($200K)</span>
+                    </div>
+                    <div className="p-2 rounded bg-black/10 dark:bg-zinc-900/80 border border-[var(--card-border)]">
+                      <span className="text-[9px] text-[var(--text-muted)] block">TAKE PROFIT 2 (5x)</span>
+                      <span className="font-bold text-sky-400">
+                        ${reclaimAudit.targetScenarios.tp2Price}
+                      </span>
+                      <span className="text-[9px] text-zinc-500 block">25% Bag ($500K)</span>
+                    </div>
+                    <div className="p-2 rounded bg-black/10 dark:bg-zinc-900/80 border border-[var(--card-border)]">
+                      <span className="text-[9px] text-[var(--text-muted)] block">MOONBAG RUNNER</span>
+                      <span className="font-bold text-indigo-400">
+                        $1,000,000+
+                      </span>
+                      <span className="text-[9px] text-zinc-500 block">25% Free Ride ($1M)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Strategy Note */}
+                <div className="p-2.5 rounded bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-800 dark:text-emerald-200">
+                  <p className="leading-relaxed">{reclaimAudit.playbookStrategy}</p>
+                </div>
+
+                {reclaimAudit.evidence.length > 0 && (
+                  <div className="space-y-1 text-xs">
+                    {reclaimAudit.evidence.map((ev, i) => (
+                      <div key={i} className="text-[var(--text-muted)] flex items-center gap-1.5">
+                        <span className="text-emerald-500">•</span>
+                        <span>{ev}</span>
                       </div>
                     ))}
                   </div>

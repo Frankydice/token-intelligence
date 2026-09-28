@@ -1,6 +1,6 @@
 export type Chain = 'solana' | 'bsc' | 'robinhood' | 'base' | 'ethereum';
 
-export type TokenTag = 'new' | 'hot' | 'watchlist' | 'high_risk' | 'dev_alert' | 'smart_money' | 'urgent_dump' | 'cluster_buying';
+export type TokenTag = 'new' | 'hot' | 'watchlist' | 'high_risk' | 'dev_alert' | 'smart_money' | 'urgent_dump' | 'cluster_buying' | 'reclaim_100k';
 
 export interface Token {
   id: string;
@@ -40,6 +40,7 @@ export interface Token {
   washTradingRiskScore?: number; // 0-100 (100 = extreme wash trading probability)
   lifecycleStage?: LifecycleStage;
   bondingProgress?: number; // 0-100 (percentage towards DEX graduation)
+  reclaimSignal?: 'CONFIRMED_RECLAIM' | 'TESTING_RECLAIM' | 'FORMING_DIP' | 'NONE';
 }
 
 export type LifecycleStage = 'new_pairs' | 'about_to_graduate' | 'graduated' | 'og_revivals';

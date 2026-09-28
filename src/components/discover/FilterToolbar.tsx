@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Flame, Sparkles, AlertTriangle, Users, Eye, SlidersHorizontal } from 'lucide-react';
+import { Search, Flame, Sparkles, AlertTriangle, Users, Eye, SlidersHorizontal, TrendingUp } from 'lucide-react';
 import { useTradingStore } from '../../store/useTradingStore';
 import { TokenTag } from '../../types/token';
 
@@ -10,6 +10,7 @@ export const FilterToolbar: React.FC = () => {
     { id: 'all', label: 'ALL TOKENS', icon: Sparkles },
     { id: 'new', label: 'NEW LAUNCHES', icon: Sparkles },
     { id: 'hot', label: 'HIGH MOMENTUM', icon: Flame },
+    { id: 'reclaim_100k', label: '🚀 100K RECLAIM', icon: TrendingUp },
     { id: 'cluster_buying', label: '🐳 CLUSTER BUYING', icon: Users },
     { id: 'urgent_dump', label: '🚨 URGENT DUMPS', icon: AlertTriangle },
     { id: 'smart_money', label: 'SMART MONEY', icon: Users },

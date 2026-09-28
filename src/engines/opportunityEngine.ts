@@ -123,6 +123,23 @@ export class OpportunityEngine {
       });
     }
 
+    // 8. 100K Dip & Reclaim Pattern (Playbook Chapter 9)
+    if (token.reclaimSignal === 'CONFIRMED_RECLAIM' || token.tags.includes('reclaim_100k')) {
+      score += 15;
+      positiveFactors.push({
+        factor: 'Confirmed 100K Dip & Reclaim Pattern',
+        points: 15,
+        evidence: `Token reclaimed $100K market cap following post-migration dip with authentic buyer dominance.`,
+      });
+    } else if (token.reclaimSignal === 'TESTING_RECLAIM') {
+      score += 6;
+      positiveFactors.push({
+        factor: 'Testing 100K Reclaim Resistance',
+        points: 6,
+        evidence: `Token is pushing into the pivotal $100K market cap reclaim corridor.`,
+      });
+    }
+
     const finalScore = Math.min(98, Math.max(5, score));
     const rating =
       finalScore >= 80 ? 'EXCEPTIONAL' : finalScore >= 65 ? 'HIGH' : finalScore >= 45 ? 'MODERATE' : 'LOW';

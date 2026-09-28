@@ -1,6 +1,7 @@
 import { Token } from '../types/token';
 import { volumeAuthenticityEngine } from '../engines/volumeAuthenticityEngine';
 import { lifecycleEngine } from '../engines/lifecycleEngine';
+import { dipAndReclaimEngine } from '../engines/dipAndReclaimEngine';
 
 export type SolanaWsStatus = 'DISCONNECTED' | 'CONNECTING' | 'CONNECTED' | 'ERROR';
 
@@ -234,7 +235,7 @@ export class SolanaWebSocketListener {
     const tokenName = event.metadata?.name || `${event.platform === 'pumpfun' ? 'Pump' : 'Raydium'} Token ${event.signature.slice(0, 4)}`;
     const tokenSymbol = event.metadata?.symbol || (event.platform === 'pumpfun' ? 'PUMPNEW' : 'RAYNEW');
 
-    return lifecycleEngine.enrichToken(volumeAuthenticityEngine.enrichToken({
+    return dipAndReclaimEngine.enrichToken(lifecycleEngine.enrichToken(volumeAuthenticityEngine.enrichToken({
       id: `sol-live-${event.signature.slice(0, 8)}`,
       name: tokenName,
       symbol: tokenSymbol,
@@ -265,7 +266,7 @@ export class SolanaWebSocketListener {
       tags: ['new', 'hot'],
       circulatingSupply: 1_000_000_000,
       totalSupply: 1_000_000_000,
-    }));
+    })));
   }
 
   private emitLaunch(event: SolanaNewLaunchEvent) {

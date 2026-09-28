@@ -2,6 +2,7 @@ import { Token, Chain } from '../types/token';
 import { ITokenDiscoveryProvider, IMarketDataProvider } from '../types/provider';
 import { volumeAuthenticityEngine } from '../engines/volumeAuthenticityEngine';
 import { lifecycleEngine } from '../engines/lifecycleEngine';
+import { dipAndReclaimEngine } from '../engines/dipAndReclaimEngine';
 
 interface DexScreenerPair {
   chainId: string;
@@ -172,7 +173,7 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
           ? `${pair.baseToken.address.slice(0, 4)}...${pair.baseToken.address.slice(-4)}`
           : `0x${pair.baseToken.address.slice(2, 6)}...${pair.baseToken.address.slice(-4)}`;
 
-        liveTokens.push(lifecycleEngine.enrichToken(volumeAuthenticityEngine.enrichToken({
+        liveTokens.push(dipAndReclaimEngine.enrichToken(lifecycleEngine.enrichToken(volumeAuthenticityEngine.enrichToken({
           id: `live-${pair.chainId}-${pair.baseToken.address}`,
           name: pair.baseToken.name || pair.baseToken.symbol,
           symbol: pair.baseToken.symbol,
@@ -204,7 +205,7 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
           imageUrl: pair.info?.imageUrl,
           circulatingSupply: marketCap > 0 && priceUsd > 0 ? Math.round(marketCap / priceUsd) : 1_000_000_000,
           totalSupply: marketCap > 0 && priceUsd > 0 ? Math.round(marketCap / priceUsd) : 1_000_000_000,
-        })));
+        }))));
       }
 
       if (liveTokens.length > 0) {

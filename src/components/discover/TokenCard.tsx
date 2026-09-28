@@ -69,6 +69,16 @@ export const TokenCard: React.FC<{ token: Token }> = ({ token }) => {
                     🐳 WHALE
                   </span>
                 )}
+                {(token.tags.includes('reclaim_100k') || token.reclaimSignal === 'CONFIRMED_RECLAIM') && (
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 animate-pulse">
+                    🚀 100K RECLAIM
+                  </span>
+                )}
+                {token.reclaimSignal === 'TESTING_RECLAIM' && (
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/40">
+                    ⏳ 100K TEST
+                  </span>
+                )}
               </div>
             </div>
           </div>
