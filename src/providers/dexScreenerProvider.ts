@@ -1,5 +1,6 @@
 import { Token, Chain } from '../types/token';
 import { ITokenDiscoveryProvider, IMarketDataProvider } from '../types/provider';
+import { volumeAuthenticityEngine } from '../engines/volumeAuthenticityEngine';
 
 interface DexScreenerPair {
   chainId: string;
@@ -170,7 +171,7 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
           ? `${pair.baseToken.address.slice(0, 4)}...${pair.baseToken.address.slice(-4)}`
           : `0x${pair.baseToken.address.slice(2, 6)}...${pair.baseToken.address.slice(-4)}`;
 
-        liveTokens.push({
+        liveTokens.push(volumeAuthenticityEngine.enrichToken({
           id: `live-${pair.chainId}-${pair.baseToken.address}`,
           name: pair.baseToken.name || pair.baseToken.symbol,
           symbol: pair.baseToken.symbol,
@@ -202,7 +203,7 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
           imageUrl: pair.info?.imageUrl,
           circulatingSupply: marketCap > 0 && priceUsd > 0 ? Math.round(marketCap / priceUsd) : 1_000_000_000,
           totalSupply: marketCap > 0 && priceUsd > 0 ? Math.round(marketCap / priceUsd) : 1_000_000_000,
-        });
+        }));
       }
 
       if (liveTokens.length > 0) {
@@ -233,7 +234,7 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
       const liquidity = pair.liquidity?.usd || 0;
       const marketCap = pair.marketCap || pair.fdv || (liquidity * 2.5);
 
-      return {
+      return volumeAuthenticityEngine.enrichToken({
         id: `live-${pair.chainId}-${pair.baseToken.address}`,
         name: pair.baseToken.name,
         symbol: pair.baseToken.symbol,
@@ -265,7 +266,7 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
         imageUrl: pair.info?.imageUrl,
         circulatingSupply: marketCap > 0 && priceUsd > 0 ? Math.round(marketCap / priceUsd) : 1_000_000_000,
         totalSupply: marketCap > 0 && priceUsd > 0 ? Math.round(marketCap / priceUsd) : 1_000_000_000,
-      };
+      });
     } catch {
       return null;
     }

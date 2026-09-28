@@ -99,6 +99,30 @@ export class OpportunityEngine {
       }
     }
 
+    // 7. Volume Authenticity (Memecoin Playbook Rule)
+    if (token.volumeAuthenticity === 'WASH_TRADING' || risk.washTradingRisk === 'WASH_TRADING') {
+      score -= 25;
+      negativeFactors.push({
+        factor: 'Wash Trading / Manufactured Volume',
+        points: -25,
+        evidence: `Token volume fails the safe 1/30th fee threshold, signaling bot-farmed liquidity ramps.`,
+      });
+    } else if (token.volumeAuthenticity === 'SUSPICIOUS' || risk.washTradingRisk === 'SUSPICIOUS') {
+      score -= 10;
+      negativeFactors.push({
+        factor: 'Suspicious Volume Flow',
+        points: -10,
+        evidence: `Abnormal volume-to-liquidity multiplier or ticket size uniformity detected.`,
+      });
+    } else if (token.volumeAuthenticity === 'ORGANIC') {
+      score += 8;
+      positiveFactors.push({
+        factor: 'Organic Volume & Verifiable LP Fees',
+        points: 8,
+        evidence: `Token volume demonstrates genuine trader fee generation matching standard DEX schedules.`,
+      });
+    }
+
     const finalScore = Math.min(98, Math.max(5, score));
     const rating =
       finalScore >= 80 ? 'EXCEPTIONAL' : finalScore >= 65 ? 'HIGH' : finalScore >= 45 ? 'MODERATE' : 'LOW';

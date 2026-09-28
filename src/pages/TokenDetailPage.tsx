@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useTradingStore } from '../store/useTradingStore';
 import { formatUsd, formatPercent, truncateAddress, getExplorerUrl } from '../utils/formatters';
-import { ChainBadge, OpportunityBadge, RiskBadge } from '../components/common/Badge';
+import { ChainBadge, OpportunityBadge, RiskBadge, VolumeAuthenticityBadge } from '../components/common/Badge';
 import { providerRegistry } from '../providers/providerRegistry';
 import { DeveloperProfile } from '../types/developer';
 import { RugRiskAudit } from '../types/risk';
@@ -17,6 +17,7 @@ import { WalletCluster } from '../types/wallet';
 import { calculateUpsideScenarios, calculateDownsideScenarios } from '../utils/math';
 import { TradeSetupDraft, OrderType } from '../types/trade';
 import { detectTiedWalletRings } from '../engines/clusterIntelEngine';
+import { volumeAuthenticityEngine } from '../engines/volumeAuthenticityEngine';
 
 export const TokenDetailPage: React.FC = () => {
   const { selectedToken, tokens, openOpportunityReport, approveTradeSetup } = useTradingStore();
@@ -26,6 +27,7 @@ export const TokenDetailPage: React.FC = () => {
   // If no token selected, pick first token
   const token = selectedToken || tokens[0];
   const tiedRing = useMemo(() => (token ? detectTiedWalletRings([token])[0] : null), [token]);
+  const volumeAudit = useMemo(() => (token ? volumeAuthenticityEngine.analyzeVolume(token) : null), [token]);
 
   const [devProfile, setDevProfile] = useState<DeveloperProfile | null>(null);
   const [rugAudit, setRugAudit] = useState<RugRiskAudit | null>(null);
@@ -194,6 +196,13 @@ export const TokenDetailPage: React.FC = () => {
             <div className="flex flex-col gap-1.5">
               <OpportunityBadge score={token.opportunityScore} size="md" />
               <RiskBadge level={riskLevel} size="md" />
+              {volumeAudit && (
+                <VolumeAuthenticityBadge
+                  authenticity={volumeAudit.authenticity}
+                  ratioDisplay={volumeAudit.ratioDisplay}
+                  size="md"
+                />
+              )}
             </div>
 
             <button
@@ -246,6 +255,73 @@ export const TokenDetailPage: React.FC = () => {
                 <span className="text-zinc-400 text-[10px] uppercase tracking-wider font-medium">HOLDERS</span>
                 <div className="text-base font-semibold text-zinc-100 mt-0.5">{token.holdersCount.toLocaleString()}</div>
               </div>
+            </div>
+
+            {/* Playbook Volume Authenticity & Wash-Trading Audit */}
+            <div className="terminal-card p-4 space-y-3 border-l-4 border-l-sky-500">
+              <div className="flex items-center justify-between border-b border-[var(--card-border)] pb-2 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-sky-400" />
+                  <span className="font-semibold text-[var(--text-primary)]">
+                    VOLUME AUTHENTICITY &amp; WASH-TRADING AUDIT
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-[var(--text-muted)] font-mono">Memecoin Playbook Safe 1/30th Rule</span>
+                  {volumeAudit && (
+                    <VolumeAuthenticityBadge
+                      authenticity={volumeAudit.authenticity}
+                      ratioDisplay={volumeAudit.ratioDisplay}
+                      size="sm"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+                <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                  <span className="text-[10px] text-[var(--text-muted)] block">24H VOLUME</span>
+                  <span className="text-sm font-semibold">{formatUsd(token.volume24h)}</span>
+                </div>
+                <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                  <span className="text-[10px] text-[var(--text-muted)] block">LP TRADING FEES</span>
+                  <span className="text-sm font-semibold text-emerald-500">
+                    ${volumeAudit ? Math.round(volumeAudit.fees24h).toLocaleString() : '0'}
+                  </span>
+                </div>
+                <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                  <span className="text-[10px] text-[var(--text-muted)] block">FEE-TO-VOLUME YIELD</span>
+                  <span className="text-sm font-semibold">
+                    {volumeAudit ? `${volumeAudit.feePercentage.toFixed(2)}%` : '0%'}
+                  </span>
+                </div>
+                <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                  <span className="text-[10px] text-[var(--text-muted)] block">VOLUME / FEE RATIO</span>
+                  <span className={`text-sm font-semibold ${volumeAudit?.authenticity === 'WASH_TRADING' ? 'text-rose-500 font-bold' : 'text-sky-400'}`}>
+                    {volumeAudit?.ratioDisplay || 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              {volumeAudit && volumeAudit.reasons.length > 0 && (
+                <div className="space-y-1.5 pt-1 text-xs">
+                  {volumeAudit.reasons.map((reason, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-2 rounded flex items-start gap-2 ${
+                        volumeAudit.authenticity === 'WASH_TRADING'
+                          ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20'
+                          : volumeAudit.authenticity === 'SUSPICIOUS'
+                          ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
+                          : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                      }`}
+                    >
+                      <span className="text-[11px]">•</span>
+                      <span>{reason}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* AI Agent Decision Log & Summary */}

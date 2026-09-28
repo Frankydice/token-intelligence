@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Copy, Check, ExternalLink, ShieldAlert, ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { Token } from '../../types/token';
-import { ChainBadge, OpportunityBadge, RiskBadge } from '../common/Badge';
+import { ChainBadge, OpportunityBadge, RiskBadge, VolumeAuthenticityBadge } from '../common/Badge';
 import { formatUsd, formatPercent, truncateAddress, getExplorerUrl } from '../../utils/formatters';
 import { useTradingStore } from '../../store/useTradingStore';
 
@@ -68,10 +68,14 @@ export const TokenCard: React.FC<{ token: Token }> = ({ token }) => {
             </div>
           </div>
 
-          {/* Badges: Risk & Opportunity */}
+          {/* Badges: Risk & Opportunity & Volume Authenticity */}
           <div className="flex flex-col items-end gap-1 shrink-0">
             <OpportunityBadge score={token.opportunityScore} />
             <RiskBadge level={riskLevel} />
+            <VolumeAuthenticityBadge
+              authenticity={token.volumeAuthenticity}
+              ratioDisplay={token.volumeFeeRatio ? `1/${Math.round(token.volumeFeeRatio)}th` : undefined}
+            />
           </div>
         </div>
 
@@ -139,11 +143,25 @@ export const TokenCard: React.FC<{ token: Token }> = ({ token }) => {
           </div>
 
           <div className="bg-slate-50 dark:bg-zinc-900/60 p-2 rounded-md border border-slate-200 dark:border-zinc-800/60">
-            <div className="text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-400 uppercase tracking-wider font-medium">24h Vol</div>
+            <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-400 dark:text-zinc-400 uppercase tracking-wider font-medium">
+              <span>24h Vol</span>
+              {token.fees24h !== undefined && (
+                <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-mono">
+                  Fee: ${Math.round(token.fees24h).toLocaleString()}
+                </span>
+              )}
+            </div>
             <div className="font-semibold text-slate-900 dark:text-zinc-100">{formatUsd(token.volume24h)}</div>
-            <div className="text-[10px] text-slate-500 dark:text-zinc-400">
-              <span className="text-emerald-600 dark:text-emerald-400">{formatUsd(token.volumeBuy24h, 0)} B</span> /{' '}
-              <span className="text-rose-600 dark:text-rose-400">{formatUsd(token.volumeSell24h, 0)} S</span>
+            <div className="text-[10px] text-slate-500 dark:text-zinc-400 flex items-center justify-between">
+              <span>
+                <span className="text-emerald-600 dark:text-emerald-400">{formatUsd(token.volumeBuy24h, 0)} B</span> /{' '}
+                <span className="text-rose-600 dark:text-rose-400">{formatUsd(token.volumeSell24h, 0)} S</span>
+              </span>
+              {token.volumeFeeRatio && (
+                <span className={`text-[9px] font-mono ${token.volumeAuthenticity === 'WASH_TRADING' ? 'text-rose-500 font-bold' : 'text-slate-400 dark:text-zinc-500'}`}>
+                  1/{Math.round(token.volumeFeeRatio)}th
+                </span>
+              )}
             </div>
           </div>
         </div>

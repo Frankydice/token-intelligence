@@ -92,3 +92,46 @@ export const ChainBadge: React.FC<{ chain: Chain }> = ({ chain }) => {
     </span>
   );
 };
+
+export const VolumeAuthenticityBadge: React.FC<{
+  authenticity?: 'ORGANIC' | 'SUSPICIOUS' | 'WASH_TRADING';
+  ratioDisplay?: string;
+  size?: 'sm' | 'md';
+}> = ({ authenticity = 'ORGANIC', ratioDisplay, size = 'sm' }) => {
+  const pad = size === 'sm' ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-1 text-[11px]';
+
+  if (authenticity === 'WASH_TRADING') {
+    return (
+      <span
+        title="Playbook Alert: 24h fees are less than 1/30th of volume or volume disconnected from liquidity. Wash trading detected."
+        className={`inline-flex items-center gap-1 font-mono font-bold rounded border ${pad} bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 animate-pulse`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+        <span>FAKE VOL (&lt;1/30)</span>
+      </span>
+    );
+  }
+
+  if (authenticity === 'SUSPICIOUS') {
+    return (
+      <span
+        title="Playbook Warning: Borderline fee yield or abnormal volume-to-liquidity ratio."
+        className={`inline-flex items-center gap-1 font-mono font-semibold rounded border ${pad} bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+        <span>SUSPICIOUS VOL</span>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      title={`Playbook Verified: Clean volume generating legitimate protocol LP fees (${ratioDisplay || 'normal tier'}).`}
+      className={`inline-flex items-center gap-1 font-mono font-medium rounded border ${pad} bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30`}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+      <span>ORGANIC VOL{ratioDisplay ? ` (${ratioDisplay})` : ''}</span>
+    </span>
+  );
+};
+

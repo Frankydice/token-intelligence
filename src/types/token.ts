@@ -34,6 +34,10 @@ export interface Token {
   imageUrl?: string;
   circulatingSupply: number;
   totalSupply: number;
+  fees24h?: number;
+  volumeFeeRatio?: number; // volume24h / Math.max(1, fees24h)
+  volumeAuthenticity?: 'ORGANIC' | 'SUSPICIOUS' | 'WASH_TRADING';
+  washTradingRiskScore?: number; // 0-100 (100 = extreme wash trading probability)
 }
 
 export interface TokenFilter {

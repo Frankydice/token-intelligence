@@ -1,13 +1,15 @@
 import { RugRiskAudit, SolanaSecurity, EvmSecurity } from '../types/risk';
 import { EvidenceItem } from '../types/developer';
-import { Chain } from '../types/token';
+import { Chain, Token } from '../types/token';
+import { volumeAuthenticityEngine, VolumeAuthenticityResult } from './volumeAuthenticityEngine';
 
 export class RugRiskEngine {
   public auditSolanaToken(
     tokenAddress: string,
     security: SolanaSecurity,
     creatorSoldPercent: number = 0,
-    hasPriorRugHistory: boolean = false
+    hasPriorRugHistory: boolean = false,
+    tokenContext?: Partial<Token>
   ): RugRiskAudit {
     const facts: EvidenceItem[] = [];
     const indicators: EvidenceItem[] = [];
@@ -108,12 +110,54 @@ export class RugRiskEngine {
       });
     }
 
+    let washResult: VolumeAuthenticityResult | null = null;
+    if (tokenContext?.volume24h !== undefined) {
+      washResult = volumeAuthenticityEngine.analyzeVolume({
+        address: tokenAddress,
+        chain: 'solana',
+        dexId: tokenAddress.toLowerCase().endsWith('pump') ? 'pumpfun' : 'raydium',
+        volume24h: tokenContext.volume24h,
+        fees24h: tokenContext.fees24h,
+        liquidity: tokenContext.liquidity || 15000,
+        txns24hBuy: tokenContext.txns24hBuy || 10,
+        txns24hSell: tokenContext.txns24hSell || 10,
+        volumeBuy24h: tokenContext.volumeBuy24h || tokenContext.volume24h / 2,
+        volumeSell24h: tokenContext.volumeSell24h || tokenContext.volume24h / 2,
+      } as Token);
+
+      if (washResult.authenticity === 'WASH_TRADING') {
+        riskScore += 25;
+        indicators.push({
+          id: 'vol-i-washtrading',
+          type: 'INDICATOR',
+          description: `Wash Trading / Fake Volume Detected: Fee yield (${washResult.feePercentage.toFixed(2)}%) violates safe 1/30th threshold.`,
+          timestamp: Date.now(),
+        });
+      } else if (washResult.authenticity === 'SUSPICIOUS') {
+        riskScore += 10;
+        indicators.push({
+          id: 'vol-i-suspicious',
+          type: 'INDICATOR',
+          description: `Suspicious volume activity: Abnormal volume-to-liquidity ratio or trade rhythm observed.`,
+          timestamp: Date.now(),
+        });
+      }
+
+      facts.push({
+        id: 'vol-f-ratio',
+        type: 'FACT',
+        description: `24h Volume: $${tokenContext.volume24h.toLocaleString()} with ${washResult.ratioDisplay} generated in LP fees ($${washResult.fees24h.toLocaleString()}).`,
+        tokenAddress,
+        timestamp: Date.now(),
+      });
+    }
+
     inferences.push({
       id: 'sol-inf-01',
       type: 'INFERENCE',
       description:
         riskScore > 60
-          ? 'Elevated risk profile. Caution warranted regarding sudden liquidity collapse or supply dumping.'
+          ? 'Elevated risk profile. Caution warranted regarding sudden liquidity collapse, wash trading, or supply dumping.'
           : 'Standard SPL token deployment parameters verified without structural traps.',
       timestamp: Date.now(),
     });
@@ -131,10 +175,12 @@ export class RugRiskEngine {
       facts,
       indicators,
       inferences,
-      summary: `Solana Token Audit: Mint ${security.mintAuthority}, Freeze ${security.freezeAuthority}, LP Burned ${security.lpBurnedPercent}%.`,
+      summary: `Solana Token Audit: Mint ${security.mintAuthority}, Freeze ${security.freezeAuthority}, LP Burned ${security.lpBurnedPercent}%${washResult ? `, Volume: ${washResult.authenticity}` : ''}.`,
       creatorSellRisk: creatorSoldPercent > 10 ? 'HIGH' : 'LOW',
       liquidityRemovalRisk: security.lpBurnedPercent < 90 ? 'HIGH' : 'LOW',
       holderConcentrationRisk: security.top10HoldersPercent > 40 ? 'SEVERE' : 'HEALTHY',
+      washTradingRisk: washResult?.authenticity,
+      volumeFeeRatioDisplay: washResult?.ratioDisplay,
     };
   }
 
@@ -143,7 +189,8 @@ export class RugRiskEngine {
     chain: Chain,
     security: EvmSecurity,
     creatorSoldPercent: number = 0,
-    hasPriorRugHistory: boolean = false
+    hasPriorRugHistory: boolean = false,
+    tokenContext?: Partial<Token>
   ): RugRiskAudit {
     const facts: EvidenceItem[] = [];
     const indicators: EvidenceItem[] = [];
@@ -205,6 +252,48 @@ export class RugRiskEngine {
       });
     }
 
+    let washResult: VolumeAuthenticityResult | null = null;
+    if (tokenContext?.volume24h !== undefined) {
+      washResult = volumeAuthenticityEngine.analyzeVolume({
+        address: tokenAddress,
+        chain,
+        dexId: chain === 'bsc' ? 'pancakeswap' : 'robinhood_swap',
+        volume24h: tokenContext.volume24h,
+        fees24h: tokenContext.fees24h,
+        liquidity: tokenContext.liquidity || 25000,
+        txns24hBuy: tokenContext.txns24hBuy || 10,
+        txns24hSell: tokenContext.txns24hSell || 10,
+        volumeBuy24h: tokenContext.volumeBuy24h || tokenContext.volume24h / 2,
+        volumeSell24h: tokenContext.volumeSell24h || tokenContext.volume24h / 2,
+      } as Token);
+
+      if (washResult.authenticity === 'WASH_TRADING') {
+        riskScore += 25;
+        indicators.push({
+          id: 'evm-vol-i-washtrading',
+          type: 'INDICATOR',
+          description: `Wash Trading / Fake Volume Detected: Fee yield (${washResult.feePercentage.toFixed(2)}%) violates safe 1/30th threshold.`,
+          timestamp: Date.now(),
+        });
+      } else if (washResult.authenticity === 'SUSPICIOUS') {
+        riskScore += 10;
+        indicators.push({
+          id: 'evm-vol-i-suspicious',
+          type: 'INDICATOR',
+          description: `Suspicious volume activity: Abnormal volume-to-liquidity ratio or trade rhythm observed.`,
+          timestamp: Date.now(),
+        });
+      }
+
+      facts.push({
+        id: 'evm-vol-f-ratio',
+        type: 'FACT',
+        description: `24h Volume: $${tokenContext.volume24h.toLocaleString()} with ${washResult.ratioDisplay} generated in LP fees ($${washResult.fees24h.toLocaleString()}).`,
+        tokenAddress,
+        timestamp: Date.now(),
+      });
+    }
+
     inferences.push({
       id: 'evm-inf-summary',
       type: 'INFERENCE',
@@ -228,10 +317,12 @@ export class RugRiskEngine {
       facts,
       indicators,
       inferences,
-      summary: `EVM Contract Audit: Buy Tax ${security.buyTaxPercent}%, Sell Tax ${security.sellTaxPercent}%, LP Locked ${security.lpLockedPercent}%.`,
+      summary: `EVM Contract Audit: Buy Tax ${security.buyTaxPercent}%, Sell Tax ${security.sellTaxPercent}%, LP Locked ${security.lpLockedPercent}%${washResult ? `, Volume: ${washResult.authenticity}` : ''}.`,
       creatorSellRisk: creatorSoldPercent > 10 ? 'HIGH' : 'LOW',
       liquidityRemovalRisk: security.lpLockedPercent < 80 ? 'HIGH' : 'LOW',
       holderConcentrationRisk: security.top10HoldersPercent > 40 ? 'SEVERE' : 'HEALTHY',
+      washTradingRisk: washResult?.authenticity,
+      volumeFeeRatioDisplay: washResult?.ratioDisplay,
     };
   }
 }

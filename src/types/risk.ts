@@ -35,4 +35,6 @@ export interface RugRiskAudit {
   creatorSellRisk: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
   liquidityRemovalRisk: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
   holderConcentrationRisk: 'HEALTHY' | 'MODERATE' | 'SEVERE';
+  washTradingRisk?: 'ORGANIC' | 'SUSPICIOUS' | 'WASH_TRADING';
+  volumeFeeRatioDisplay?: string;
 }

@@ -1,4 +1,5 @@
 import { Token } from '../types/token';
+import { volumeAuthenticityEngine } from '../engines/volumeAuthenticityEngine';
 
 export type RobinhoodChainStatus = 'DISCONNECTED' | 'CONNECTING' | 'CONNECTED' | 'ERROR';
 
@@ -215,7 +216,7 @@ export class RobinhoodChainListener {
     const defaultPrice = isRwa ? 150.0 : 0.00045;
     const defaultMcap = isRwa ? liquidityUsd * 4 : liquidityUsd * 2.5;
 
-    return {
+    return volumeAuthenticityEngine.enrichToken({
       id: `rh-live-${event.signature.slice(0, 10)}`,
       name: event.metadata?.name || `Robinhood Token ${event.signature.slice(2, 6).toUpperCase()}`,
       symbol: event.metadata?.symbol || 'RHOOD',
@@ -246,7 +247,7 @@ export class RobinhoodChainListener {
       tags: ['new', 'hot'],
       circulatingSupply: 1_000_000_000,
       totalSupply: 1_000_000_000,
-    };
+    });
   }
 
   private emitLaunch(event: RobinhoodNewLaunchEvent) {
