@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useDevice } from '../../hooks/useDevice';
 import { formatUsd } from '../../utils/formatters';
 import { WalletProfileDropdown } from '../wallet/WalletProfileDropdown';
+import { MarketSessionClock } from '../common/MarketSessionClock';
 
 export const Header: React.FC = () => {
   const {
@@ -140,6 +141,9 @@ export const Header: React.FC = () => {
 
         {/* Right: Controls & Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Playbook Chapter 16 Market Session Clock */}
+          <MarketSessionClock />
+
           {/* Theme Switcher Toggle */}
           <button
             onClick={toggleTheme}
