@@ -20,7 +20,8 @@ export interface SolanaNewLaunchEvent {
 
 export class SolanaWebSocketListener {
   private ws: WebSocket | null = null;
-  private endpoint: string = 'wss://api.mainnet-beta.solana.com';
+  // Default to PumpPortal real-time WebSocket for live Solana token creations
+  private endpoint: string = 'wss://pumpportal.fun/api/data';
   private status: SolanaWsStatus = 'DISCONNECTED';
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private isManualDisconnect: boolean = false;
@@ -28,7 +29,7 @@ export class SolanaWebSocketListener {
   private statusListeners: ((status: SolanaWsStatus) => void)[] = [];
   private launchListeners: ((event: SolanaNewLaunchEvent) => void)[] = [];
 
-  // Solana Program IDs
+  // Solana Program IDs (for standard RPC connections)
   public static readonly PUMPFUN_PROGRAM_ID = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P';
   public static readonly RAYDIUM_AMM_PROGRAM_ID = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8';
 
@@ -89,7 +90,17 @@ export class SolanaWebSocketListener {
       this.ws.onopen = () => {
         this.reconnectAttempts = 0;
         this.setStatus('CONNECTED');
-        this.subscribeToPrograms();
+
+        // Check if connecting to PumpPortal or standard Solana RPC
+        if (this.endpoint.includes('pumpportal')) {
+          try {
+            this.ws?.send(JSON.stringify({ method: 'subscribeNewToken' }));
+          } catch (e) {
+            console.warn('[SolanaWsListener] Failed to send subscription:', e);
+          }
+        } else {
+          this.subscribeToPrograms();
+        }
       };
 
       this.ws.onmessage = (event: MessageEvent) => {
@@ -97,7 +108,7 @@ export class SolanaWebSocketListener {
       };
 
       this.ws.onerror = (err) => {
-        console.warn('[SolanaWsListener] WebSocket direct connection error:', err);
+        console.warn('[SolanaWsListener] WebSocket connection error:', err);
         if (!this.isManualDisconnect) {
           this.setStatus('ERROR');
           this.scheduleReconnect();
@@ -123,7 +134,7 @@ export class SolanaWebSocketListener {
 
   private scheduleReconnect(): void {
     if (this.isManualDisconnect || this.reconnectTimeout) return;
-    const delay = Math.min(30000, 2000 * Math.pow(1.5, this.reconnectAttempts));
+    const delay = Math.min(15000, 2000 * Math.pow(1.3, this.reconnectAttempts));
     this.reconnectAttempts++;
 
     this.reconnectTimeout = setTimeout(() => {
@@ -152,7 +163,7 @@ export class SolanaWebSocketListener {
   }
 
   /**
-   * Subscribes to logs for Pump.fun and Raydium programs
+   * Subscribes to logs for Pump.fun and Raydium programs on standard Solana RPCs
    */
   private subscribeToPrograms(): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
@@ -182,11 +193,31 @@ export class SolanaWebSocketListener {
   }
 
   /**
-   * Parse Solana JSON-RPC logs notification
+   * Parse Solana launch notifications from PumpPortal or Solana JSON-RPC
    */
   public handleMessage(raw: string): void {
     try {
       const data = JSON.parse(raw);
+
+      // 1. Direct PumpPortal new token event format
+      if (data.mint) {
+        const event: SolanaNewLaunchEvent = {
+          platform: 'pumpfun',
+          mintAddress: data.mint,
+          signature: data.signature || `sig_${data.mint.slice(0, 12)}`,
+          timestamp: Date.now(),
+          initialLiquiditySol: typeof data.vSolInBondingCurve === 'number' ? data.vSolInBondingCurve : 30.0,
+          logSnippet: `Pump.fun Live Mint: ${data.name || data.symbol || data.mint}`,
+          metadata: {
+            name: data.name,
+            symbol: data.symbol,
+          },
+        };
+        this.emitLaunch(event);
+        return;
+      }
+
+      // 2. Standard Solana JSON-RPC logs notification format
       if (!data.params || !data.params.result || !data.params.result.value) {
         return;
       }
@@ -229,39 +260,43 @@ export class SolanaWebSocketListener {
   }
 
   /**
-   * Transforms a real-time launch event into a Token model
+   * Transforms a real-time launch event into an enriched Token model
    */
   public createTokenFromLaunch(event: SolanaNewLaunchEvent): Token {
     const tokenName = event.metadata?.name || `${event.platform === 'pumpfun' ? 'Pump' : 'Raydium'} Token ${event.signature.slice(0, 4)}`;
     const tokenSymbol = event.metadata?.symbol || (event.platform === 'pumpfun' ? 'PUMPNEW' : 'RAYNEW');
+    const initialSol = event.initialLiquiditySol || 30.0;
+    const solPriceUsd = 150;
+    const initialLiquidityUsd = Math.round(initialSol * solPriceUsd);
+    const initialMcap = Math.round(initialLiquidityUsd * 2.5);
 
     return dipAndReclaimEngine.enrichToken(lifecycleEngine.enrichToken(volumeAuthenticityEngine.enrichToken({
-      id: `sol-live-${event.signature.slice(0, 8)}`,
+      id: `sol-live-${event.mintAddress}`,
       name: tokenName,
       symbol: tokenSymbol,
       address: event.mintAddress,
       chain: 'solana',
-      pairAddress: `pool_${event.signature.slice(0, 8)}`,
+      pairAddress: `pool_${event.mintAddress.slice(0, 8)}`,
       dexId: event.platform,
-      priceUsd: 0.00015,
+      priceUsd: 0.000015,
       priceChange24h: 0,
       priceChange1h: 0,
       priceChange5m: 0,
-      marketCap: 15_000,
-      liquidity: (event.initialLiquiditySol || 30) * 150,
+      marketCap: initialMcap,
+      liquidity: initialLiquidityUsd,
       liquidityChange24h: 0,
-      volume24h: 5000,
-      volumeBuy24h: 5000,
+      volume24h: Math.round(initialLiquidityUsd * 0.4),
+      volumeBuy24h: Math.round(initialLiquidityUsd * 0.4),
       volumeSell24h: 0,
       txns24hBuy: 1,
       txns24hSell: 0,
       holdersCount: 1,
       holderGrowth24hPercent: 0,
       createdAt: event.timestamp,
-      ageHours: 0.05,
-      creatorAddress: '5Q54...liveDeployer',
-      riskScore: 30,
-      opportunityScore: 78,
+      ageHours: 0.01,
+      creatorAddress: event.mintAddress.slice(0, 6) + '...pump',
+      riskScore: 25,
+      opportunityScore: 80,
       isDemo: false,
       tags: ['new', 'hot'],
       circulatingSupply: 1_000_000_000,

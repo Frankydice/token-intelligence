@@ -33,13 +33,13 @@ export const Header: React.FC = () => {
     <header className="border-b border-slate-200 dark:border-zinc-800/80 bg-white/95 dark:bg-[#0c0e14]/95 px-3 sm:px-4 py-2 sm:py-2.5 sticky top-0 z-40 backdrop-blur-sm transition-colors">
       <div className="flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Brand & Connection Status */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700/60 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
             <Zap className="w-4 h-4" />
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-              <span className="font-bold text-xs sm:text-sm tracking-wide text-slate-900 dark:text-zinc-100 font-mono truncate">
+          <div>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="font-bold text-xs sm:text-sm tracking-wide text-slate-900 dark:text-zinc-100 font-mono whitespace-nowrap">
                 <span className="sm:hidden">TOKEN INTEL</span>
                 <span className="hidden sm:inline">TOKEN INTELLIGENCE</span>{' '}
                 <span className="text-sky-600 dark:text-sky-400 font-semibold">&amp; SNIPER</span>
@@ -54,38 +54,38 @@ export const Header: React.FC = () => {
               {/* Solana WSS on Desktop */}
               <button
                 onClick={() => toggleSolanaWs(solanaWsStatus !== 'CONNECTED')}
-                className={`hidden sm:flex px-2 py-0.5 rounded text-[10px] font-mono items-center gap-1.5 border transition ${
+                className={`hidden sm:flex px-2 py-0.5 rounded text-[10px] font-mono items-center gap-1.5 border transition whitespace-nowrap ${
                   solanaWsStatus === 'CONNECTED'
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                     : solanaWsStatus === 'CONNECTING'
                     ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 animate-pulse'
                     : 'bg-slate-100 dark:bg-zinc-800/60 text-slate-500 dark:text-zinc-400 border-slate-200 dark:border-zinc-700/50'
                 }`}
-                title="Solana WebSocket logsSubscribe status. Click to connect or disconnect."
+                title="Solana WebSocket PumpPortal stream. Click to connect or reconnect."
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${solanaWsStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
-                SOL WSS: {solanaWsStatus}
+                <span>SOL WSS: {solanaWsStatus}</span>
               </button>
 
               {/* Robinhood L2 on Desktop */}
               <button
                 onClick={() => toggleRobinhoodChain(robinhoodChainStatus !== 'CONNECTED')}
-                className={`hidden md:flex px-2 py-0.5 rounded text-[10px] font-mono items-center gap-1.5 border transition ${
+                className={`hidden md:flex px-2 py-0.5 rounded text-[10px] font-mono items-center gap-1.5 border transition whitespace-nowrap ${
                   robinhoodChainStatus === 'CONNECTED'
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                     : robinhoodChainStatus === 'CONNECTING'
                     ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 animate-pulse'
                     : 'bg-slate-100 dark:bg-zinc-800/60 text-slate-500 dark:text-zinc-400 border-slate-200 dark:border-zinc-700/50'
                 }`}
-                title="Robinhood Chain Arbitrum Orbit L2 RPC stream. Click to connect or disconnect."
+                title="Robinhood Chain Arbitrum Orbit stream. Click to connect or reconnect."
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${robinhoodChainStatus === 'CONNECTED' ? 'bg-[#00c805] animate-pulse' : 'bg-slate-400'}`}></span>
-                RH L2: {robinhoodChainStatus}
+                <span>RH L2: {robinhoodChainStatus}</span>
               </button>
 
               {/* Device Detection Pill */}
               <span
-                className="hidden xl:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/50"
+                className="hidden 2xl:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/50"
                 title={`Detected client environment: ${deviceType.toUpperCase()}`}
               >
                 {isMobile ? <Smartphone className="w-2.5 h-2.5" /> : <Laptop className="w-2.5 h-2.5" />}
@@ -93,7 +93,7 @@ export const Header: React.FC = () => {
               </span>
             </div>
 
-            <p className="hidden md:flex text-[11px] text-slate-500 dark:text-zinc-400 font-mono items-center gap-1.5 mt-0.5">
+            <p className="hidden 2xl:flex text-[10px] text-slate-500 dark:text-zinc-400 font-mono items-center gap-1.5 mt-0.5 whitespace-nowrap">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
               HUMAN-IN-THE-LOOP TERMINAL • SOLANA • BNB CHAIN • ROBINHOOD
             </p>
@@ -101,7 +101,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Center: Quick Chain Selector (Desktop Only) */}
-        <div className="hidden lg:flex items-center bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-0.5 text-xs font-mono">
+        <div className="hidden xl:flex items-center bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-0.5 text-xs font-mono shrink-0">
           {(['all', 'solana', 'bsc', 'robinhood'] as const).map((ch) => (
             <button
               key={ch}
@@ -118,7 +118,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Center-Right: Metrics Bar (Tablet / Desktop) */}
-        <div className="hidden md:flex items-center gap-4 text-xs font-mono border-l border-r border-slate-200 dark:border-zinc-800 px-4">
+        <div className="hidden lg:flex items-center gap-3 xl:gap-4 text-xs font-mono border-l border-r border-slate-200 dark:border-zinc-800 px-3 xl:px-4 shrink-0">
           <div>
             <div className="text-[10px] text-slate-400 dark:text-zinc-400 uppercase tracking-wider font-medium">Discovered</div>
             <div className="font-semibold text-slate-800 dark:text-zinc-200">{tokens.length} tokens</div>
@@ -138,6 +138,7 @@ export const Header: React.FC = () => {
             </div>
           </div>
         </div>
+
 
         {/* Right: Controls & Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">

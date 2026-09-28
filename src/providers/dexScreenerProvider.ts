@@ -60,40 +60,104 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
   private lastFetchTime = 0;
 
   async discoverTokens(chain?: Chain): Promise<Token[]> {
-    // 5-second cache to prevent aggressive browser rate-limiting while polling
+    // 6-second cache to prevent aggressive browser rate-limiting while polling
     const now = Date.now();
-    if (this.cachedTokens.length > 0 && now - this.lastFetchTime < 5000) {
+    if (this.cachedTokens.length > 0 && now - this.lastFetchTime < 6000) {
       if (chain) return this.cachedTokens.filter((t) => t.chain === chain);
       return this.cachedTokens;
     }
 
     try {
-      const searchQueries: string[] = [];
-      if (!chain || chain === 'solana') {
-        searchQueries.push('pump.fun', 'raydium');
-      }
-      if (!chain || chain === 'bsc') {
-        searchQueries.push('pancakeswap');
-      }
-      if (!chain || chain === 'robinhood') {
-        searchQueries.push('robinhood', 'orbit');
+      const addressSet = new Set<string>();
+
+      // 1. Fetch newest live token profiles and boosted tokens from DexScreener
+      try {
+        const [profilesRes, boostsRes] = await Promise.allSettled([
+          fetch('https://api.dexscreener.com/token-profiles/latest/v1', {
+            headers: { Accept: 'application/json' },
+          }),
+          fetch('https://api.dexscreener.com/token-boosts/latest/v1', {
+            headers: { Accept: 'application/json' },
+          }),
+        ]);
+
+        if (profilesRes.status === 'fulfilled' && profilesRes.value.ok) {
+          const profiles = await profilesRes.value.json();
+          if (Array.isArray(profiles)) {
+            profiles.forEach((p) => {
+              if (p.tokenAddress) {
+                if (!chain || p.chainId === chain || (chain === 'robinhood' && p.chainId === 'robinhood')) {
+                  addressSet.add(p.tokenAddress);
+                }
+              }
+            });
+          }
+        }
+
+        if (boostsRes.status === 'fulfilled' && boostsRes.value.ok) {
+          const boosts = await boostsRes.value.json();
+          if (Array.isArray(boosts)) {
+            boosts.forEach((b) => {
+              if (b.tokenAddress) {
+                if (!chain || b.chainId === chain || (chain === 'robinhood' && b.chainId === 'robinhood')) {
+                  addressSet.add(b.tokenAddress);
+                }
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[DexScreenerProvider] Latest profile/boost fetch error:', err);
       }
 
+      // 2. Pair lookup for discovered live token addresses (batch of up to 30)
       const fetchedPairs: DexScreenerPair[] = [];
+      const tokenAddresses = Array.from(addressSet);
+      if (tokenAddresses.length > 0) {
+        const chunkSize = 28;
+        for (let i = 0; i < Math.min(tokenAddresses.length, 60); i += chunkSize) {
+          const chunk = tokenAddresses.slice(i, i + chunkSize).join(',');
+          try {
+            const res = await fetch(`${this.baseUrl}/tokens/${chunk}`, {
+              headers: { Accept: 'application/json' },
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (Array.isArray(data.pairs)) {
+                fetchedPairs.push(...data.pairs);
+              }
+            }
+          } catch {
+            // continue
+          }
+        }
+      }
+
+      // 3. Fallback / Search pairs to supplement liquidity
+      const searchQueries: string[] = [];
+      if (!chain || chain === 'solana') {
+        searchQueries.push('SOL');
+      }
+      if (!chain || chain === 'bsc') {
+        searchQueries.push('WBNB');
+      }
+      if (!chain || chain === 'robinhood') {
+        searchQueries.push('robinhood');
+      }
 
       for (const query of searchQueries) {
         try {
           const res = await fetch(`${this.baseUrl}/search?q=${encodeURIComponent(query)}`, {
-            headers: { 'Accept': 'application/json' },
+            headers: { Accept: 'application/json' },
           });
           if (res.ok) {
             const data = await res.json();
             if (Array.isArray(data.pairs)) {
-              fetchedPairs.push(...data.pairs);
+              fetchedPairs.push(...data.pairs.slice(0, 15));
             }
           }
         } catch {
-          // Continue to next query if one encounters a network timeout
+          // continue
         }
       }
 
@@ -209,13 +273,16 @@ export class DexScreenerProvider implements ITokenDiscoveryProvider, IMarketData
       }
 
       if (liveTokens.length > 0) {
+        liveTokens.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         this.cachedTokens = liveTokens;
         this.lastFetchTime = now;
       }
 
+      if (chain) return this.cachedTokens.filter((t) => t.chain === chain);
       return this.cachedTokens;
     } catch (err) {
       console.error('[DexScreenerProvider] Error discovering tokens:', err);
+      if (chain) return this.cachedTokens.filter((t) => t.chain === chain);
       return this.cachedTokens;
     }
   }
