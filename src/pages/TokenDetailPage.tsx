@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useTradingStore } from '../store/useTradingStore';
 import { formatUsd, formatPercent, truncateAddress, getExplorerUrl } from '../utils/formatters';
-import { ChainBadge, OpportunityBadge, RiskBadge, VolumeAuthenticityBadge } from '../components/common/Badge';
+import { ChainBadge, OpportunityBadge, RiskBadge, VolumeAuthenticityBadge, LifecycleBadge } from '../components/common/Badge';
 import { providerRegistry } from '../providers/providerRegistry';
 import { DeveloperProfile } from '../types/developer';
 import { RugRiskAudit } from '../types/risk';
@@ -18,6 +18,7 @@ import { calculateUpsideScenarios, calculateDownsideScenarios } from '../utils/m
 import { TradeSetupDraft, OrderType } from '../types/trade';
 import { detectTiedWalletRings } from '../engines/clusterIntelEngine';
 import { volumeAuthenticityEngine } from '../engines/volumeAuthenticityEngine';
+import { lifecycleEngine } from '../engines/lifecycleEngine';
 
 export const TokenDetailPage: React.FC = () => {
   const { selectedToken, tokens, openOpportunityReport, approveTradeSetup } = useTradingStore();
@@ -28,6 +29,7 @@ export const TokenDetailPage: React.FC = () => {
   const token = selectedToken || tokens[0];
   const tiedRing = useMemo(() => (token ? detectTiedWalletRings([token])[0] : null), [token]);
   const volumeAudit = useMemo(() => (token ? volumeAuthenticityEngine.analyzeVolume(token) : null), [token]);
+  const lifecycleAudit = useMemo(() => (token ? lifecycleEngine.analyzeLifecycle(token) : null), [token]);
 
   const [devProfile, setDevProfile] = useState<DeveloperProfile | null>(null);
   const [rugAudit, setRugAudit] = useState<RugRiskAudit | null>(null);
@@ -203,6 +205,14 @@ export const TokenDetailPage: React.FC = () => {
                   size="md"
                 />
               )}
+              {lifecycleAudit && (
+                <LifecycleBadge
+                  stage={lifecycleAudit.stage}
+                  bondingProgress={lifecycleAudit.bondingProgress}
+                  ageHours={token.ageHours}
+                  size="md"
+                />
+              )}
             </div>
 
             <button
@@ -323,6 +333,93 @@ export const TokenDetailPage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Playbook 3-Tier Lifecycle & Bonding Curve Audit */}
+            {lifecycleAudit && (
+              <div className="terminal-card p-4 space-y-3 border-l-4 border-l-amber-500">
+                <div className="flex items-center justify-between border-b border-[var(--card-border)] pb-2 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🧬</span>
+                    <span className="font-semibold text-[var(--text-primary)]">
+                      LIFECYCLE STAGE &amp; BONDING CURVE AUDIT
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono">Memecoin Playbook Ch. 5, 8, 11, 13</span>
+                    <LifecycleBadge
+                      stage={lifecycleAudit.stage}
+                      bondingProgress={lifecycleAudit.bondingProgress}
+                      ageHours={token.ageHours}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Bonding Progress Bar if sub-bonding or pre-graduation */}
+                {lifecycleAudit.bondingProgress < 100 && (
+                  <div className="p-3 rounded bg-black/5 dark:bg-zinc-950/70 border border-[var(--card-border)] space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-[var(--text-muted)]">Bonding Curve Progress:</span>
+                      <span className="font-bold text-amber-500 dark:text-amber-400">
+                        {lifecycleAudit.bondingProgress}% to Raydium Migration ($69K Target)
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          lifecycleAudit.bondingProgress >= 75
+                            ? 'bg-amber-500'
+                            : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${lifecycleAudit.bondingProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">CURRENT STAGE</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">{lifecycleAudit.stageLabel}</span>
+                  </div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">EST. 24H FEES</span>
+                    <span className="text-sm font-semibold text-emerald-500">
+                      {lifecycleAudit.feesSolEstimate} SOL (~${Math.round(lifecycleAudit.feesSolEstimate * 150)})
+                    </span>
+                  </div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">PLAYBOOK MIN FEE</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">
+                      {lifecycleAudit.minFeeRequiredSol} SOL ({lifecycleAudit.meetsFeeThreshold ? '✅ PASS' : '⚠️ DEFICIT'})
+                    </span>
+                  </div>
+                  <div className="bg-black/5 dark:bg-zinc-950/70 p-2.5 rounded border border-[var(--card-border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">DEX PLATFORM</span>
+                    <span className="text-sm font-semibold uppercase text-sky-400">{token.dexId}</span>
+                  </div>
+                </div>
+
+                {/* Tactical Playbook Strategy Banner */}
+                <div className="p-2.5 rounded bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-200">
+                  <div className="font-semibold mb-0.5 flex items-center gap-1.5">
+                    <span>💡 Tactical Playbook Execution:</span>
+                  </div>
+                  <p className="leading-relaxed">{lifecycleAudit.playbookStrategy}</p>
+                </div>
+
+                {lifecycleAudit.reasons.length > 0 && (
+                  <div className="space-y-1 text-xs">
+                    {lifecycleAudit.reasons.map((r, i) => (
+                      <div key={i} className="text-[var(--text-muted)] flex items-center gap-1.5">
+                        <span className="text-amber-500">•</span>
+                        <span>{r}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* AI Agent Decision Log & Summary */}
             <div className="terminal-card p-4 space-y-3">

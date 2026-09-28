@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Copy, Check, ExternalLink, ShieldAlert, ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { Token } from '../../types/token';
-import { ChainBadge, OpportunityBadge, RiskBadge, VolumeAuthenticityBadge } from '../common/Badge';
+import { ChainBadge, OpportunityBadge, RiskBadge, VolumeAuthenticityBadge, LifecycleBadge } from '../common/Badge';
 import { formatUsd, formatPercent, truncateAddress, getExplorerUrl } from '../../utils/formatters';
 import { useTradingStore } from '../../store/useTradingStore';
 
@@ -51,6 +51,11 @@ export const TokenCard: React.FC<{ token: Token }> = ({ token }) => {
               </div>
               <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                 <ChainBadge chain={token.chain} />
+                <LifecycleBadge
+                  stage={token.lifecycleStage}
+                  bondingProgress={token.bondingProgress}
+                  ageHours={token.ageHours}
+                />
                 <span className="text-[11px] text-slate-400 dark:text-zinc-400 font-mono">
                   {token.ageHours < 24 ? `${token.ageHours}h` : `${(token.ageHours / 24).toFixed(1)}d`}
                 </span>
@@ -116,6 +121,29 @@ export const TokenCard: React.FC<{ token: Token }> = ({ token }) => {
             </div>
           </div>
         </div>
+
+        {/* Bonding Curve Progress Bar for Pre-Graduation / Sub-Bonding tokens */}
+        {token.bondingProgress !== undefined && token.bondingProgress < 100 && (
+          <div className="mb-3 px-1 py-1.5 rounded bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-900/80">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-zinc-400 mb-1">
+              <span className="flex items-center gap-1">
+                <span>Curve:</span>
+                <span className="font-semibold text-slate-800 dark:text-zinc-200">{token.bondingProgress}%</span>
+              </span>
+              <span>{token.bondingProgress >= 75 ? '⚡ 75-99% Graduation Push' : 'To DEX Migration ($69K)'}</span>
+            </div>
+            <div className="w-full bg-slate-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  token.bondingProgress >= 75
+                    ? 'bg-amber-500'
+                    : 'bg-emerald-500'
+                }`}
+                style={{ width: `${token.bondingProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Price & Primary Financial Metrics Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 mb-3 text-xs font-mono">

@@ -63,6 +63,44 @@ export const FilterToolbar: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Memecoin Playbook 3-Tier Lifecycle Tabs (Chapters 5, 8, 11, 13) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 border-b border-slate-100 dark:border-zinc-800/60 pb-2">
+        <span className="text-[10px] text-amber-500 dark:text-amber-400 font-mono uppercase tracking-wider font-semibold mr-1 shrink-0">
+          LIFECYCLE:
+        </span>
+        {([
+          { id: 'all', label: 'ALL STAGES', desc: 'All token lifecycle stages' },
+          { id: 'new_pairs', label: '🌱 SUB-BONDING (<$60K)', desc: 'Tier 1: Early bonding curve, min 0.1 SOL fees' },
+          { id: 'about_to_graduate', label: '⚡ ABOUT TO GRADUATE (75-99%)', desc: 'Tier 2: $60K-$90K graduation push corridor, min 2 SOL fees' },
+          { id: 'graduated', label: '🎓 GRADUATED DEX', desc: 'Tier 3: Post-graduation AMM (Raydium / DEX), min 5 SOL fees' },
+          { id: 'og_revivals', label: '🏛️ OG REVIVALS (>14D)', desc: 'Tier 4: Dead coins coming back to life, clean holder base' },
+        ] as const).map((stage) => {
+          const isSelected = (filter.lifecycleStage || 'all') === stage.id;
+          return (
+            <button
+              key={stage.id}
+              onClick={() => setFilter({ lifecycleStage: stage.id })}
+              title={stage.desc}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono transition whitespace-nowrap shrink-0 ${
+                isSelected
+                  ? stage.id === 'about_to_graduate'
+                    ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
+                    : stage.id === 'og_revivals'
+                    ? 'bg-cyan-600 text-white dark:bg-cyan-500 dark:text-zinc-950 font-bold shadow-sm'
+                    : stage.id === 'graduated'
+                    ? 'bg-indigo-600 text-white dark:bg-indigo-500 dark:text-zinc-950 font-bold shadow-sm'
+                    : stage.id === 'new_pairs'
+                    ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-zinc-950 font-bold shadow-sm'
+                    : 'bg-slate-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm border border-slate-900 dark:border-zinc-700'
+                  : 'bg-slate-100 dark:bg-zinc-900/60 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 border border-slate-200 dark:border-zinc-800/80 hover:bg-slate-200 dark:hover:bg-zinc-900'
+              }`}
+            >
+              <span>{stage.label}</span>
+            </button>
+          );
+        })}
+      </div>
       <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
         {categories.map((cat) => {
           const Icon = cat.icon;

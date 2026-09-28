@@ -15,6 +15,8 @@ import {
 } from './liveIntelligenceProvider';
 import { SimulatedExecutionProvider, LiveExecutionProvider } from './executionProvider';
 import { DEMO_TOKENS } from './demoDataProvider';
+import { volumeAuthenticityEngine } from '../engines/volumeAuthenticityEngine';
+import { lifecycleEngine } from '../engines/lifecycleEngine';
 
 /**
  * Fallback provider used for unit tests or when offline
@@ -24,14 +26,14 @@ export class OfflineFallbackProvider implements ITokenDiscoveryProvider, IMarket
   readonly isDemo = false;
 
   async discoverTokens(chain?: Chain): Promise<Token[]> {
-    const tokens = DEMO_TOKENS.map((t) => ({ ...t, isDemo: false }));
+    const tokens = DEMO_TOKENS.map((t) => lifecycleEngine.enrichToken(volumeAuthenticityEngine.enrichToken({ ...t, isDemo: false })));
     if (!chain) return tokens;
     return tokens.filter((t) => t.chain === chain);
   }
 
   async getTokenByAddress(address: string): Promise<Token | null> {
     const found = DEMO_TOKENS.find((t) => t.address.toLowerCase() === address.toLowerCase());
-    return found ? { ...found, isDemo: false } : null;
+    return found ? lifecycleEngine.enrichToken(volumeAuthenticityEngine.enrichToken({ ...found, isDemo: false })) : null;
   }
 
   async getPrice(address: string): Promise<number> {

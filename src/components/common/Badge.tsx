@@ -1,6 +1,6 @@
 import React from 'react';
 import { RiskLevel } from '../../types/developer';
-import { Chain } from '../../types/token';
+import { Chain, LifecycleStage } from '../../types/token';
 
 export const RiskBadge: React.FC<{ level: RiskLevel; size?: 'sm' | 'md' }> = ({ level, size = 'sm' }) => {
   const styles: Record<RiskLevel, { dot: string; text: string; badgeClass: string }> = {
@@ -131,6 +131,62 @@ export const VolumeAuthenticityBadge: React.FC<{
     >
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
       <span>ORGANIC VOL{ratioDisplay ? ` (${ratioDisplay})` : ''}</span>
+    </span>
+  );
+};
+
+export const LifecycleBadge: React.FC<{
+  stage?: LifecycleStage;
+  bondingProgress?: number;
+  ageHours?: number;
+  size?: 'sm' | 'md';
+}> = ({ stage = 'new_pairs', bondingProgress, ageHours, size = 'sm' }) => {
+  const pad = size === 'sm' ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-1 text-[11px]';
+
+  if (stage === 'about_to_graduate') {
+    return (
+      <span
+        title={`Playbook Tier 2: About to Graduate (${bondingProgress || 85}% curve progress). High-momentum graduation corridor.`}
+        className={`inline-flex items-center gap-1 font-mono font-bold rounded border ${pad} bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 animate-ping"></span>
+        <span>⚡ PRE-GRAD {bondingProgress ? `${bondingProgress}%` : ''}</span>
+      </span>
+    );
+  }
+
+  if (stage === 'graduated') {
+    return (
+      <span
+        title="Playbook Tier 3: Graduated AMM Pool (Raydium / DEX). Established liquidity with locked LP."
+        className={`inline-flex items-center gap-1 font-mono font-medium rounded border ${pad} bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+        <span>🎓 GRADUATED</span>
+      </span>
+    );
+  }
+
+  if (stage === 'og_revivals') {
+    const days = ageHours ? Math.round(ageHours / 24) : 14;
+    return (
+      <span
+        title={`Playbook Chapter 13 & 15: OG Revival (${days}d old). Community takeover with organic holder distribution.`}
+        className={`inline-flex items-center gap-1 font-mono font-medium rounded border ${pad} bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/30`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0"></span>
+        <span>🏛️ OG REVIVAL ({days}d)</span>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      title={`Playbook Tier 1: Sub-Bonding Curve (${bondingProgress || 10}% progress). Early discovery.`}
+      className={`inline-flex items-center gap-1 font-mono font-medium rounded border ${pad} bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30`}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+      <span>🌱 SUB-BONDING{bondingProgress ? ` (${bondingProgress}%)` : ''}</span>
     </span>
   );
 };

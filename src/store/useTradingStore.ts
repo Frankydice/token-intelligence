@@ -13,6 +13,7 @@ import { storageService, PersistedAppSettings, DEFAULT_APP_SETTINGS } from '../s
 import { telegramBotService } from '../services/telegramBotService';
 import { solanaWsListener, SolanaWsStatus } from '../providers/solanaWebSocketListener';
 import { robinhoodChainListener, RobinhoodChainStatus } from '../providers/robinhoodChainListener';
+import { lifecycleEngine } from '../engines/lifecycleEngine';
 
 export interface TradingState {
   tokens: Token[];
@@ -51,6 +52,7 @@ let globalState: TradingState = {
     minOpportunityScore: 0,
     maxRiskScore: 100,
     tag: 'all',
+    lifecycleStage: 'all',
   },
   activeNav: 'DISCOVER',
   detailTab: 'overview',
@@ -761,6 +763,9 @@ export function useTradingStore() {
   const filteredTokens = useMemo(() => {
     return state.tokens.filter((t) => {
       if (state.filter.chain !== 'all' && t.chain !== state.filter.chain) return false;
+      if (state.filter.lifecycleStage && state.filter.lifecycleStage !== 'all') {
+        if (!lifecycleEngine.isTokenInLifecycleStage(t, state.filter.lifecycleStage)) return false;
+      }
       if (state.filter.tag && state.filter.tag !== 'all' && !t.tags.includes(state.filter.tag)) return false;
       if (t.liquidity < state.filter.minLiquidity) return false;
       if (t.opportunityScore < state.filter.minOpportunityScore) return false;

@@ -38,7 +38,11 @@ export interface Token {
   volumeFeeRatio?: number; // volume24h / Math.max(1, fees24h)
   volumeAuthenticity?: 'ORGANIC' | 'SUSPICIOUS' | 'WASH_TRADING';
   washTradingRiskScore?: number; // 0-100 (100 = extreme wash trading probability)
+  lifecycleStage?: LifecycleStage;
+  bondingProgress?: number; // 0-100 (percentage towards DEX graduation)
 }
+
+export type LifecycleStage = 'new_pairs' | 'about_to_graduate' | 'graduated' | 'og_revivals';
 
 export interface TokenFilter {
   chain: 'all' | Chain;
@@ -53,4 +57,5 @@ export interface TokenFilter {
   maxRiskScore: number;
   tag?: TokenTag | 'all';
   searchQuery?: string;
+  lifecycleStage?: 'all' | LifecycleStage;
 }
