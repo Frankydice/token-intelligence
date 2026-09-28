@@ -9,6 +9,13 @@ import {
   ShieldAlert,
   DollarSign,
   RefreshCw,
+  Sparkles,
+  Star,
+  Check,
+  Copy,
+  ShieldCheck,
+  SlidersHorizontal,
+  ArrowUpRight,
 } from 'lucide-react';
 import { formatUsd, truncateAddress, getExplorerUrl, formatTimeAgo } from '../utils/formatters';
 import { ChainBadge } from '../components/common/Badge';
@@ -16,8 +23,10 @@ import { useTradingStore } from '../store/useTradingStore';
 import { providerRegistry } from '../providers/providerRegistry';
 import { WalletCluster } from '../types/wallet';
 import { detectTiedWalletRings, detectWhaleBuySignals } from '../engines/clusterIntelEngine';
+import { earlyAccumulatorEngine } from '../engines/earlyAccumulatorEngine';
+import { storageService } from '../services/storageService';
 
-type SubView = 'tied_wallets' | 'whales' | 'clusters';
+type SubView = 'tied_wallets' | 'whales' | 'clusters' | 'smart_money';
 
 export const WalletsPage: React.FC = () => {
   const {
@@ -34,9 +43,49 @@ export const WalletsPage: React.FC = () => {
   const [allClusters, setAllClusters] = useState<WalletCluster[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // Private Smart Money Filter State
+  const [minWinRate, setMinWinRate] = useState<number>(60);
+  const [maxEntryMcap, setMaxEntryMcap] = useState<number>(60000);
+  const [onlyStealth, setOnlyStealth] = useState<boolean>(true);
+  const [watchlistOnly, setWatchlistOnly] = useState<boolean>(false);
+  const [watchlistWallets, setWatchlistWallets] = useState<string[]>([]);
+  const [copiedWallet, setCopiedWallet] = useState<string | null>(null);
+
+  // Load saved alpha watchlist on mount
+  useEffect(() => {
+    storageService.loadAlphaWatchlist().then(setWatchlistWallets);
+  }, []);
+
+  const toggleWatchlist = (walletAddress: string) => {
+    const updated = watchlistWallets.includes(walletAddress)
+      ? watchlistWallets.filter((w) => w !== walletAddress)
+      : [...watchlistWallets, walletAddress];
+    setWatchlistWallets(updated);
+    storageService.saveAlphaWatchlist(updated);
+  };
+
+  const handleCopyWallet = (address: string) => {
+    navigator.clipboard.writeText(address);
+    setCopiedWallet(address);
+    setTimeout(() => setCopiedWallet(null), 1500);
+  };
+
   // Compute live tied rings and whale signals from tokens
   const tiedRings = useMemo(() => detectTiedWalletRings(tokens), [tokens]);
   const whaleSignals = useMemo(() => detectWhaleBuySignals(tokens), [tokens]);
+
+  // Compute smart money profiles
+  const accumulatorProfiles = useMemo(() => {
+    const profiles = earlyAccumulatorEngine.reverseEngineerAllTokens(tokens, {
+      minWinRate: minWinRate > 0 ? minWinRate : undefined,
+      maxEntryMcap: maxEntryMcap > 0 ? maxEntryMcap : undefined,
+      onlyStealth,
+    });
+    if (watchlistOnly) {
+      return profiles.filter((p) => watchlistWallets.includes(p.walletAddress));
+    }
+    return profiles;
+  }, [tokens, minWinRate, maxEntryMcap, onlyStealth, watchlistOnly, watchlistWallets]);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,35 +160,35 @@ export const WalletsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 3-Way Sub-Navigation Tabs */}
+        {/* 4-Way Sub-Navigation Tabs */}
         <div className="flex border border-[var(--card-border)] rounded-lg p-1 bg-black/5 dark:bg-zinc-900/60 text-xs overflow-x-auto no-scrollbar gap-1">
           <button
             onClick={() => setActiveSubView('tied_wallets')}
-            className={`flex-1 min-w-[160px] py-2 px-3 rounded font-semibold text-center transition flex items-center justify-center gap-2 ${
+            className={`flex-1 min-w-[150px] py-2 px-3 rounded font-semibold text-center transition flex items-center justify-center gap-1.5 ${
               activeSubView === 'tied_wallets'
                 ? 'bg-rose-600 text-white shadow-sm'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
             <GitBranch className="w-3.5 h-3.5" />
-            <span>TIED WALLETS &amp; WASH DUMPS ({tiedRings.length})</span>
+            <span>TIED WALLETS ({tiedRings.length})</span>
           </button>
 
           <button
             onClick={() => setActiveSubView('whales')}
-            className={`flex-1 min-w-[160px] py-2 px-3 rounded font-semibold text-center transition flex items-center justify-center gap-2 ${
+            className={`flex-1 min-w-[150px] py-2 px-3 rounded font-semibold text-center transition flex items-center justify-center gap-1.5 ${
               activeSubView === 'whales'
                 ? 'bg-sky-600 text-white shadow-sm'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
             <DollarSign className="w-3.5 h-3.5" />
-            <span>BIG BUYERS &amp; WHALES ({whaleSignals.length})</span>
+            <span>WHALES ({whaleSignals.length})</span>
           </button>
 
           <button
             onClick={() => setActiveSubView('clusters')}
-            className={`flex-1 min-w-[160px] py-2 px-3 rounded font-semibold text-center transition flex items-center justify-center gap-2 ${
+            className={`flex-1 min-w-[150px] py-2 px-3 rounded font-semibold text-center transition flex items-center justify-center gap-1.5 ${
               activeSubView === 'clusters'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -147,6 +196,18 @@ export const WalletsPage: React.FC = () => {
           >
             <Users className="w-3.5 h-3.5" />
             <span>SNIPER CLUSTERS ({allClusters.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubView('smart_money')}
+            className={`flex-1 min-w-[180px] py-2 px-3 rounded font-semibold text-center transition flex items-center justify-center gap-1.5 ${
+              activeSubView === 'smart_money'
+                ? 'bg-gradient-to-r from-amber-500 to-emerald-600 text-white shadow-sm'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>🎯 PRIVATE SMART MONEY ({accumulatorProfiles.length})</span>
           </button>
         </div>
 
@@ -576,6 +637,281 @@ export const WalletsPage: React.FC = () => {
                 <p className="text-[var(--text-muted)] text-[11px] max-w-md mx-auto">
                   Awaiting block transactions with coordinated multi-wallet entries.
                 </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* SUBVIEW 4: PRIVATE SMART MONEY & REVERSE-ENGINEERED EARLY ACCUMULATORS */}
+        {activeSubView === 'smart_money' && (
+          <div className="space-y-4">
+            {/* Playbook Chapter 14 Guidance Banner */}
+            <div className="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-sky-500/10 border border-emerald-500/30 rounded-lg p-3.5 text-[11px] text-[var(--text-primary)] flex items-start gap-3">
+              <div className="p-2 rounded-md bg-emerald-500/20 text-emerald-400 shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold uppercase tracking-wide text-xs text-emerald-400">
+                    REVERSE-ENGINEER EARLY ACCUMULATORS (PLAYBOOK CH. 14 &amp; 14.5)
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                    ANTI-KOL / ANTI-SLIPPAGE
+                  </span>
+                </div>
+                <p className="text-[var(--text-muted)] text-[11px] leading-relaxed">
+                  Following public KOL call channels buys tops with 15%+ slippage into 500 copytrade bots. 
+                  True alpha is identifying the private wallets that bought at <span className="text-emerald-400 font-semibold">&lt;$50k market cap</span>, 
+                  held through the 40-50% dip, took staged 2x/5x scale-outs, and maintain a <span className="text-emerald-400 font-semibold">&gt;60% win rate</span> with independent CEX funding.
+                </p>
+              </div>
+            </div>
+
+            {/* Interactive Filters Bar */}
+            <div className="terminal-card p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 text-[var(--text-muted)] font-semibold">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Filters:</span>
+                </div>
+
+                {/* Min Win Rate Filter */}
+                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-800/80 px-2 py-1 rounded border border-[var(--card-border)]">
+                  <span className="text-[var(--text-muted)] text-[11px]">Min Win Rate:</span>
+                  <select
+                    value={minWinRate}
+                    onChange={(e) => setMinWinRate(Number(e.target.value))}
+                    className="bg-transparent text-[var(--text-primary)] font-bold text-xs outline-none cursor-pointer"
+                  >
+                    <option value={0}>Any</option>
+                    <option value={50}>50%+</option>
+                    <option value={60}>60%+ (Playbook Standard)</option>
+                    <option value={70}>70%+ (Elite)</option>
+                  </select>
+                </div>
+
+                {/* Max Entry Mcap Filter */}
+                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-800/80 px-2 py-1 rounded border border-[var(--card-border)]">
+                  <span className="text-[var(--text-muted)] text-[11px]">Max Entry Mcap:</span>
+                  <select
+                    value={maxEntryMcap}
+                    onChange={(e) => setMaxEntryMcap(Number(e.target.value))}
+                    className="bg-transparent text-[var(--text-primary)] font-bold text-xs outline-none cursor-pointer"
+                  >
+                    <option value={0}>Any Mcap</option>
+                    <option value={30000}>&lt; $30k (Genesis Accumulation)</option>
+                    <option value={50000}>&lt; $50k (Playbook Rule)</option>
+                    <option value={60000}>&lt; $60k (Standard Bonding)</option>
+                    <option value={100000}>&lt; $100k</option>
+                  </select>
+                </div>
+
+                {/* Stealth Only Toggle */}
+                <button
+                  onClick={() => setOnlyStealth(!onlyStealth)}
+                  className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 border transition ${
+                    onlyStealth
+                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                      : 'bg-black/5 dark:bg-zinc-800 text-[var(--text-muted)] border-[var(--card-border)]'
+                  }`}
+                  title="Filter out public KOLs with 250+ copybots and micro-duration jeeters"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Stealth Only (Disqualify KOLs &amp; Jeets)</span>
+                </button>
+
+                {/* Watchlist Only Toggle */}
+                <button
+                  onClick={() => setWatchlistOnly(!watchlistOnly)}
+                  className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 border transition ${
+                    watchlistOnly
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                      : 'bg-black/5 dark:bg-zinc-800 text-[var(--text-muted)] border-[var(--card-border)]'
+                  }`}
+                >
+                  <Star className={`w-3.5 h-3.5 ${watchlistOnly ? 'fill-amber-400' : ''}`} />
+                  <span>Saved Alpha Watchlist ({watchlistWallets.length})</span>
+                </button>
+              </div>
+
+              <div className="text-[11px] text-[var(--text-muted)] font-mono">
+                Showing <span className="font-bold text-[var(--text-primary)]">{accumulatorProfiles.length}</span> verified profiles
+              </div>
+            </div>
+
+            {/* Profiles List */}
+            {accumulatorProfiles.length > 0 ? (
+              <div className="space-y-3">
+                {accumulatorProfiles.map((p) => {
+                  const isStarred = watchlistWallets.includes(p.walletAddress);
+                  const isStealth = p.classification === 'STEALTH_WHALE' || p.classification === 'CONVICTION_ACCUMULATOR';
+
+                  return (
+                    <div
+                      key={p.id}
+                      className={`terminal-card p-4 space-y-3 border-l-4 transition ${
+                        p.classification === 'STEALTH_WHALE'
+                          ? 'border-l-emerald-500 hover:border-emerald-400'
+                          : p.classification === 'CONVICTION_ACCUMULATOR'
+                          ? 'border-l-cyan-500 hover:border-cyan-400'
+                          : p.classification === 'KOL_COPYCAT_DISQUALIFIED'
+                          ? 'border-l-amber-500/60 opacity-80'
+                          : 'border-l-rose-500/60 opacity-75'
+                      }`}
+                    >
+                      {/* Top Header Row */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--card-border)] pb-2.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* Star Watchlist Button */}
+                          <button
+                            onClick={() => toggleWatchlist(p.walletAddress)}
+                            className="p-1 rounded hover:bg-black/10 dark:hover:bg-zinc-800 transition text-amber-400"
+                            title={isStarred ? 'Remove from Watchlist' : 'Add to Alpha Watchlist'}
+                          >
+                            <Star className={`w-4 h-4 ${isStarred ? 'fill-amber-400' : 'text-slate-400'}`} />
+                          </button>
+
+                          {/* Wallet Address + Copy */}
+                          <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900 px-2 py-0.5 rounded border border-[var(--card-border)]">
+                            <span className="font-bold text-[var(--text-primary)]">{p.walletAddress}</span>
+                            <button
+                              onClick={() => handleCopyWallet(p.walletAddress)}
+                              className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-0.5 transition"
+                              title="Copy Address"
+                            >
+                              {copiedWallet === p.walletAddress ? (
+                                <Check className="w-3 h-3 text-emerald-400" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
+
+                          <ChainBadge chain={p.chain} />
+
+                          {/* Classification Badge */}
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                              p.classification === 'STEALTH_WHALE'
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                : p.classification === 'CONVICTION_ACCUMULATOR'
+                                ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                                : p.classification === 'KOL_COPYCAT_DISQUALIFIED'
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                            }`}
+                          >
+                            {p.classificationLabel}
+                          </span>
+
+                          <span className="text-[10px] text-[var(--text-muted)]">
+                            Target Token: <strong className="text-[var(--text-primary)]">${p.tokenSymbol}</strong>
+                          </span>
+                        </div>
+
+                        {/* Quick action buttons */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleInspect(p.tokenAddress)}
+                            className="px-2.5 py-1 rounded bg-black/5 dark:bg-zinc-800 hover:bg-black/10 dark:hover:bg-zinc-700 text-[var(--text-primary)] border border-[var(--card-border)] text-[11px] font-semibold flex items-center gap-1 transition"
+                          >
+                            <span>Inspect Token</span>
+                            <ArrowUpRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Key Accumulation Metrics Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 text-[11px]">
+                        <div className="bg-black/5 dark:bg-zinc-900/60 p-2 rounded border border-[var(--card-border)]">
+                          <span className="text-[var(--text-muted)] block text-[10px]">ENTRY MCAP</span>
+                          <span className={`font-bold text-xs ${p.entryMarketCap <= 50000 ? 'text-emerald-400' : 'text-[var(--text-primary)]'}`}>
+                            {formatUsd(p.entryMarketCap)}
+                          </span>
+                        </div>
+
+                        <div className="bg-black/5 dark:bg-zinc-900/60 p-2 rounded border border-[var(--card-border)]">
+                          <span className="text-[var(--text-muted)] block text-[10px]">ROI MULTIPLE</span>
+                          <span className="font-bold text-xs text-emerald-400">
+                            {p.roiMultiple.toFixed(1)}x
+                          </span>
+                        </div>
+
+                        <div className="bg-black/5 dark:bg-zinc-900/60 p-2 rounded border border-[var(--card-border)]">
+                          <span className="text-[var(--text-muted)] block text-[10px]">WIN RATE</span>
+                          <span className={`font-bold text-xs ${p.historicalWinRate >= 60 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                            {p.historicalWinRate}% ({p.totalTokensTraded} tokens)
+                          </span>
+                        </div>
+
+                        <div className="bg-black/5 dark:bg-zinc-900/60 p-2 rounded border border-[var(--card-border)]">
+                          <span className="text-[var(--text-muted)] block text-[10px]">AVG HOLD TIME</span>
+                          <span className={`font-bold text-xs ${p.avgHoldDurationHours < 0.1 ? 'text-rose-400' : 'text-[var(--text-primary)]'}`}>
+                            {p.avgHoldDurationHours >= 1 ? `${p.avgHoldDurationHours}h` : `${Math.round(p.avgHoldDurationHours * 60)}m`}
+                          </span>
+                        </div>
+
+                        <div className="bg-black/5 dark:bg-zinc-900/60 p-2 rounded border border-[var(--card-border)]">
+                          <span className="text-[var(--text-muted)] block text-[10px]">STAGE-OUTS</span>
+                          <span className="font-bold text-xs text-[var(--text-primary)]">
+                            {p.stagedExitsCount} exits ({p.remainingBagPercent}% moonbag)
+                          </span>
+                        </div>
+
+                        <div className="bg-black/5 dark:bg-zinc-900/60 p-2 rounded border border-[var(--card-border)]">
+                          <span className="text-[var(--text-muted)] block text-[10px]">FUNDING ORIGIN</span>
+                          <span className="font-semibold text-[10px] text-[var(--text-primary)] truncate block" title={p.fundingSource}>
+                            {p.fundingSource}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Verdict & Evidence Notes */}
+                      <div className="bg-black/5 dark:bg-zinc-900/40 p-2.5 rounded border border-[var(--card-border)] space-y-1.5 text-[11px]">
+                        <div className="flex items-center gap-1.5 font-bold">
+                          {isStealth ? (
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          ) : (
+                            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                          )}
+                          <span className={isStealth ? 'text-emerald-400' : 'text-amber-400'}>
+                            {p.playbookVerdict}
+                          </span>
+                        </div>
+                        <ul className="list-disc list-inside text-[var(--text-muted)] space-y-0.5 pl-1">
+                          {p.evidence.map((ev, idx) => (
+                            <li key={idx}>{ev}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="terminal-card p-12 text-center space-y-3">
+                <Sparkles className="w-8 h-8 text-slate-400 mx-auto" />
+                <h4 className="font-semibold text-sm text-[var(--text-primary)]">
+                  No Accumulator Profiles Found
+                </h4>
+                <p className="text-[var(--text-muted)] text-[11px] max-w-md mx-auto">
+                  {watchlistOnly
+                    ? 'Your Alpha Watchlist is currently empty. Star early accumulator wallets from the list to track them.'
+                    : 'Try adjusting your filters (e.g. lower win rate threshold or expand maximum entry market cap).'}
+                </p>
+                {(minWinRate > 0 || maxEntryMcap < 100000 || watchlistOnly) && (
+                  <button
+                    onClick={() => {
+                      setMinWinRate(0);
+                      setMaxEntryMcap(0);
+                      setWatchlistOnly(false);
+                      setOnlyStealth(false);
+                    }}
+                    className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition"
+                  >
+                    Reset All Filters
+                  </button>
+                )}
               </div>
             )}
           </div>

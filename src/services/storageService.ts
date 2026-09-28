@@ -194,6 +194,29 @@ export class StorageService {
   }
 
   /**
+   * Save private smart money alpha watchlist
+   */
+  public async saveAlphaWatchlist(wallets: string[]): Promise<void> {
+    try {
+      this.setItem(STORAGE_KEYS.WATCHLIST, JSON.stringify(wallets));
+    } catch (err) {
+      console.warn('[StorageService] Error saving alpha watchlist:', err);
+    }
+  }
+
+  /**
+   * Load private smart money alpha watchlist
+   */
+  public async loadAlphaWatchlist(): Promise<string[]> {
+    try {
+      const data = this.getItem(STORAGE_KEYS.WATCHLIST);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
    * Export all audit logs as a downloadable JSON string
    */
   public exportAuditLogsJson(logs: AuditLogEntry[]): string {
